@@ -23,9 +23,9 @@ import java.util.UUID;
 
 public class ledControl extends ActionBarActivity {
 
-    Button btnOn, btnOff, btnDis;
+    Button btnOn, btnOff, btnDis, btnUpdate;
     SeekBar brightness;
-    TextView lumn;
+    TextView lumn, inputText;
     String address = null;
     private ProgressDialog progress;
     BluetoothAdapter myBluetooth = null;
@@ -49,6 +49,8 @@ public class ledControl extends ActionBarActivity {
         btnOn = (Button)findViewById(R.id.button2);
         btnOff = (Button)findViewById(R.id.button3);
         btnDis = (Button)findViewById(R.id.button4);
+        btnUpdate = (Button)findViewById(R.id.button5);
+        inputText = (TextView)findViewById(R.id.textView4);
         brightness = (SeekBar)findViewById(R.id.seekBar);
         lumn = (TextView)findViewById(R.id.lumn);
 
@@ -78,6 +80,15 @@ public class ledControl extends ActionBarActivity {
             public void onClick(View v)
             {
                 Disconnect(); //close connection
+            }
+        });
+
+        btnUpdate.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Update(); //update Textbox
             }
         });
 
@@ -123,6 +134,26 @@ public class ledControl extends ActionBarActivity {
         }
         finish(); //return to the first layout
 
+    }
+
+    private void Update()
+    {
+        if (btSocket!=null) //If the btSocket is busy
+        {
+            try
+            {
+                inputText.setText(btSocket.getInputStream().toString());
+                //msg(convertStreamToString(btSocket.getInputStream())); //read input  TODO
+                btSocket.getOutputStream().write("TF".toString().getBytes());
+            }
+            catch (IOException e)
+            { msg("Error");}
+        }
+    }
+
+    static String convertStreamToString(java.io.InputStream is) {
+        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : "";
     }
 
     private void turnOffLed()
@@ -200,11 +231,11 @@ public class ledControl extends ActionBarActivity {
             {
                 if (btSocket == null || !isBtConnected)
                 {
-                 myBluetooth = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
-                 BluetoothDevice dispositivo = myBluetooth.getRemoteDevice(address);//connects to the device's address and checks if it's available
-                 btSocket = dispositivo.createInsecureRfcommSocketToServiceRecord(myUUID);//create a RFCOMM (SPP) connection
-                 BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
-                 btSocket.connect();//start connection
+                    myBluetooth = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
+                    BluetoothDevice dispositivo = myBluetooth.getRemoteDevice(address);//connects to the device's address and checks if it's available
+                    btSocket = dispositivo.createInsecureRfcommSocketToServiceRecord(myUUID);//create a RFCOMM (SPP) connection
+                    BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+                    btSocket.connect();//start connection
                 }
             }
             catch (IOException e)
