@@ -3,6 +3,7 @@ package com.led.led;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -25,6 +26,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
@@ -141,17 +143,26 @@ public class ledControl extends ActionBarActivity {
 
     private void Update() {
         if (btSocket != null) { //If the btSocket is busy
+            inputText.setText("test");
             InputStream in;
-            List<Integer> byteText = null;
+            int bla;
+            byte[] byteText= new byte[32];
             try {
                 in = btSocket.getInputStream();
+                //InputStreamReader(in);
                 //inputText.setText(btSocket.getInputStream().toString());
                 //msg(convertStreamToString(btSocket.getInputStream())); //read input  TODO
                 //btSocket.getOutputStream().write("TF".toString().getBytes());
 
                 try {
                     while (true) {
-                        byteText.add(in.read());
+                        Log.d("test","fehlermeldung");
+                        bla = btSocket.getInputStream().read(byteText);
+                        Log.d("","fehlermeldung");
+                        if (bla ==0){
+                            break;
+                        };
+
                     }
                 } catch (EOFException e) {
                     msg(e.toString());
@@ -159,6 +170,7 @@ public class ledControl extends ActionBarActivity {
             } catch (IOException e) {
                 msg(e.toString());
             }
+            inputText.setText(byteText.toString());
         }
     }
 
