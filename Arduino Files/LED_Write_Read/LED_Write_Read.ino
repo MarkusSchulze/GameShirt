@@ -17,30 +17,31 @@ CapacitiveSensor   cs_4_8 = CapacitiveSensor(4,8);        // 10 megohm resistor 
 char command;
 String string;
 boolean ledon = false;
+long trigger;
 #define led 3
 SoftwareSerial mySerial(6,5);
 //SoftwareSerial myCapacitiveSerial(10,9);
 
 void setup()
 {
-    //Serial.begin(115200);
+    Serial.begin(115200);
     mySerial.begin(115200);
     //  myCapacitiveSerial.begin(115200);
     pinMode(led, OUTPUT);
 
     //cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF);     // turn off autocalibrate on channel 1 - just as an example
 
+  
+  
   // setup mean
+  if(true){
    int calibrate = 500;
    
    long sum = 0;
    for(int i=0;i<calibrate;i++){
-      long total1 =  cs_4_2.capacitiveSensor(30);
+      long total1 =  cs_9_10.capacitiveSensor(30);
       sum = sum + total1;
-      /*Serial.print("\t gemessen: ");
-      Serial.print(total1);   
-      Serial.print("\t sum: ");
-      Serial.println(sum);  */
+      
    }
 
      
@@ -56,10 +57,11 @@ void setup()
     Serial.print(sum);
     Serial.print("\t trigger: ");                    // tab character for debug window spacing
     Serial.println(trigger);  
+  }
 }
 
 void loop(){
-    //capacitive();
+    capacitive();
     // myCapacitiveSerial.listen();
     //  while(myCapacitiveSerial.available() > 0){}
     //mySerial.listen();
@@ -92,9 +94,11 @@ void loop(){
         //  mySerial.println(string);
     }
     mySerial.println("hello");
-    Serial.print("loop");
+    //Serial.print("loop");
+    Serial.println(string);
+    
     delay(1000);
-    /*
+    
     if ((string.toInt()>=0)&&(string.toInt()<=255)){
         if (ledon==true){
             analogWrite(led, string.toInt());
@@ -102,7 +106,7 @@ void loop(){
             delay(10);
         }
     }
-    */
+    
 }
 
 void ledOn(){
@@ -117,7 +121,7 @@ void ledOff(){
 
 void capacitive(){
     long start = millis();
-    long total1 =  cs_4_2.capacitiveSensor(30);
+    long total1 =  cs_9_10.capacitiveSensor(30);
     //long total2 =  cs_4_5.capacitiveSensor(30);
     //long total3 =  cs_4_8.capacitiveSensor(30);
 
@@ -128,7 +132,8 @@ void capacitive(){
     Serial.println(total1);                  // print sensor output 1
     
     if(total1 > trigger){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
-      Serial.println("treffer");
+      Serial.println("hit1");
+      mySerial.println("hit1");
     }
     //Serial.print("\t");
     //Serial.print(total2);                  // print sensor output 2
