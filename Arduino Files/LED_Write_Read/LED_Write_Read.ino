@@ -21,89 +21,78 @@ boolean ledon = false;
 SoftwareSerial mySerial(6,5);
 //SoftwareSerial myCapacitiveSerial(10,9);
 
-  void setup()
-  {
+void setup()
+{
     Serial.begin(115200);
     mySerial.begin(115200);
-  //  myCapacitiveSerial.begin(115200);
+    //  myCapacitiveSerial.begin(115200);
     pinMode(led, OUTPUT);
-    
+
     //cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF);     // turn off autocalibrate on channel 1 - just as an example
 
-   int mean = 0;
-   int old_values[20];
-   for(int i=0;i<20;i++){
-    old_values[i] = 0;
-   }
+    int mean = 0;
+    int old_values[20];
+    for(int i=0;i<20;i++){
+        old_values[i] = 0;
+    }
 
-  }
+}
 
-  void loop()
-  {
+void loop(){
     capacitive();
-   // myCapacitiveSerial.listen();
-  //  while(myCapacitiveSerial.available() > 0){}
-    //mySerial.listen(); 
-    
-    if (mySerial.available() > 0) 
-    {string = "";}
-    
+    // myCapacitiveSerial.listen();
+    //  while(myCapacitiveSerial.available() > 0){}
+    //mySerial.listen();
+
+    if (mySerial.available() > 0) {
+        string = "";
+    }
+
     while(mySerial.available() > 0)
     {
-      
-      command = ((char)mySerial.read());
-      
-      if(command == ':')
-      {
-        break;
-      }
-      
-      else
-      {
-        string += command;
-      }
-      
-      delay(1);
+        command = ((char)mySerial.read());
+
+        if(command == ':'){
+            break;
+        }
+        else{
+            string += command;
+        }
+        delay(1);
     }
-    
-    if(string =="TO")
-    {
+
+    if(string =="TO"){
         ledOn();
         ledon = true;
     }
-    
-    if(string =="TF")
-    {
+
+    if(string =="TF"){
         ledOff();
         ledon = false;
-      //  mySerial.println(string);
+        //  mySerial.println(string);
     }
-    
-    if ((string.toInt()>=0)&&(string.toInt()<=255))
-    {
-      if (ledon==true)
-      {
-        analogWrite(led, string.toInt());
-       // mySerial.println(string);
-        delay(10);
-      }
+
+    if ((string.toInt()>=0)&&(string.toInt()<=255)){
+        if (ledon==true){
+            analogWrite(led, string.toInt());
+            // mySerial.println(string);
+            delay(10);
+        }
     }
- }
- 
-void ledOn()
-   {
-      analogWrite(led, 255);
-      delay(10);
-    }
- 
- void ledOff()
- {
-      analogWrite(led, 0);
-      delay(10);
- }
- 
+}
+
+void ledOn(){
+    analogWrite(led, 255);
+    delay(10);
+}
+
+void ledOff(){
+    analogWrite(led, 0);
+    delay(10);
+}
+
 void capacitive(){
-  long start = millis();
+    long start = millis();
     long total1 =  cs_9_10.capacitiveSensor(30);
     //long total2 =  cs_4_5.capacitiveSensor(30);
     //long total3 =  cs_4_8.capacitiveSensor(30);
@@ -112,16 +101,16 @@ void capacitive(){
     Serial.print("\t");                    // tab character for debug window spacing
 
     Serial.println(total1);                  // print sensor output 1
-    
+
     if(total1 > 5000){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
-      Serial.println("treffer");
+        Serial.println("treffer");
     }
     //Serial.print("\t");
     //Serial.print(total2);                  // print sensor output 2
     //Serial.print("\t");
     //.println(total3);                // print sensor output 3
 
-    delay(10);                             // arbitrary delay to limit data to serial port 
+    delay(10);                             // arbitrary delay to limit data to serial port
 }
     
 
