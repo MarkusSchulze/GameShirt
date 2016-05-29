@@ -23,6 +23,7 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -144,32 +145,29 @@ public class ledControl extends ActionBarActivity {
     private void Update() {
         if (btSocket != null) { //If the btSocket is busy
             inputText.setText("test");
-            InputStream in;
+            String tmp = "";
             int bla;
-            byte[] byteText= new byte[32];
+            byte[] byteText = new byte[1024];
             try {
-                in = btSocket.getInputStream();
-                //InputStreamReader(in);
-                //inputText.setText(btSocket.getInputStream().toString());
-                //msg(convertStreamToString(btSocket.getInputStream())); //read input  TODO
-                //btSocket.getOutputStream().write("TF".toString().getBytes());
+                InputStream input = btSocket.getInputStream();
+                DataInputStream dInput = new DataInputStream(input);
 
-                try {
-                    while (true) {
-                        Log.d("test","fehlermeldung");
-                        bla = btSocket.getInputStream().read(byteText);
-                        Log.d("","fehlermeldung");
-                        if (bla ==0){
-                            break;
-                        };
-
-                    }
-                } catch (EOFException e) {
-                    msg(e.toString());
-                }
+//                try {
+//                    while (true) {
+//                        Log.d("test", "fehlermeldung");
+//                        dInput.readFully(byteText, 0, byteText.length);
+//
+//                        //bla = btSocket.getInputStream().read(byteText);
+//                        Log.d("", "fehlermeldung");
+//                    }
+//                } catch (EOFException e) {
+//                    msg(e.toString());
+//                }
+                tmp = convertStreamToString(input);
             } catch (IOException e) {
                 msg(e.toString());
             }
+            inputText.setText(tmp);
             inputText.setText(byteText.toString());
         }
     }
@@ -282,7 +280,7 @@ public class ledControl extends ActionBarActivity {
                 if (btSocket == null || !isBtConnected) {
                     myBluetooth = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
                     BluetoothDevice dispositivo = myBluetooth.getRemoteDevice(address);//connects to the device's address and checks if it's available
-                    btSocket = dispositivo.createInsecureRfcommSocketToServiceRecord(myUUID);//create a RFCOMM (SPP) connection
+                    btSocket = dispositivo.createRfcommSocketToServiceRecord(myUUID);//create a RFCOMM (SPP) connection
                     BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                     btSocket.connect();//start connection
                 }
