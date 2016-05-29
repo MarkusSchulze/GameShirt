@@ -1,7 +1,9 @@
 package com.led.led;
 
+import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -17,7 +19,16 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.os.AsyncTask;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
+
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Scanner;
 import java.util.UUID;
 
 
@@ -33,10 +44,14 @@ public class ledControl extends ActionBarActivity {
     private boolean isBtConnected = false;
     //SPP UUID. Look for it
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Intent newint = getIntent();
@@ -46,48 +61,41 @@ public class ledControl extends ActionBarActivity {
         setContentView(R.layout.activity_led_control);
 
         //call the widgtes
-        btnOn = (Button)findViewById(R.id.button2);
-        btnOff = (Button)findViewById(R.id.button3);
-        btnDis = (Button)findViewById(R.id.button4);
-        btnUpdate = (Button)findViewById(R.id.button5);
-        inputText = (TextView)findViewById(R.id.textView4);
-        brightness = (SeekBar)findViewById(R.id.seekBar);
-        lumn = (TextView)findViewById(R.id.lumn);
+        btnOn = (Button) findViewById(R.id.button2);
+        btnOff = (Button) findViewById(R.id.button3);
+        btnDis = (Button) findViewById(R.id.button4);
+        btnUpdate = (Button) findViewById(R.id.button5);
+        inputText = (TextView) findViewById(R.id.textView4);
+        brightness = (SeekBar) findViewById(R.id.seekBar);
+        lumn = (TextView) findViewById(R.id.lumn);
 
         new ConnectBT().execute(); //Call the class to connect
 
         //commands to be sent to bluetooth
-        btnOn.setOnClickListener(new View.OnClickListener()
-        {
+        btnOn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 turnOnLed();      //method to turn on
             }
         });
 
         btnOff.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 turnOffLed();   //method to turn off
             }
         });
 
-        btnDis.setOnClickListener(new View.OnClickListener()
-        {
+        btnDis.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 Disconnect(); //close connection
             }
         });
 
-        btnUpdate.setOnClickListener(new View.OnClickListener()
-        {
+        btnUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 Update(); //update Textbox
             }
         });
@@ -95,15 +103,11 @@ public class ledControl extends ActionBarActivity {
         brightness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser==true)
-                {
+                if (fromUser == true) {
                     lumn.setText(String.valueOf(progress));
-                    try
-                    {
+                    try {
                         btSocket.getOutputStream().write(String.valueOf(progress).getBytes());
-                    }
-                    catch (IOException e)
-                    {
+                    } catch (IOException e) {
 
                     }
                 }
@@ -119,77 +123,85 @@ public class ledControl extends ActionBarActivity {
 
             }
         });
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-    private void Disconnect()
-    {
-        if (btSocket!=null) //If the btSocket is busy
+    private void Disconnect() {
+        if (btSocket != null) //If the btSocket is busy
         {
-            try
-            {
+            try {
                 btSocket.close(); //close connection
+            } catch (IOException e) {
+                msg("Error");
             }
-            catch (IOException e)
-            { msg("Error");}
         }
         finish(); //return to the first layout
 
     }
 
-    private void Update()
-    {
-        if (btSocket!=null) //If the btSocket is busy
-        {
-            try
-            {
-                inputText.setText(btSocket.getInputStream().toString());
+    private void Update() {
+        if (btSocket != null) { //If the btSocket is busy
+            inputText.setText("test");
+            InputStream in;
+            int bla;
+            byte[] byteText= new byte[32];
+            try {
+                in = btSocket.getInputStream();
+                //InputStreamReader(in);
+                //inputText.setText(btSocket.getInputStream().toString());
                 //msg(convertStreamToString(btSocket.getInputStream())); //read input  TODO
-                btSocket.getOutputStream().write("TF".toString().getBytes());
+                //btSocket.getOutputStream().write("TF".toString().getBytes());
+
+                try {
+                    while (true) {
+                        Log.d("test","fehlermeldung");
+                        bla = btSocket.getInputStream().read(byteText);
+                        Log.d("","fehlermeldung");
+                        if (bla ==0){
+                            break;
+                        };
+
+                    }
+                } catch (EOFException e) {
+                    msg(e.toString());
+                }
+            } catch (IOException e) {
+                msg(e.toString());
             }
-            catch (IOException e)
-            { msg("Error");}
+            inputText.setText(byteText.toString());
         }
     }
 
-    static String convertStreamToString(java.io.InputStream is) {
-        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+    static String convertStreamToString(InputStream is) {
+        Scanner s = new Scanner(is).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
     }
 
-    private void turnOffLed()
-    {
-        if (btSocket!=null)
-        {
-            try
-            {
+    private void turnOffLed() {
+        if (btSocket != null) {
+            try {
                 btSocket.getOutputStream().write("TF".toString().getBytes());
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 msg("Error");
             }
         }
     }
 
-    private void turnOnLed()
-    {
-        if (btSocket!=null)
-        {
-            try
-            {
+    private void turnOnLed() {
+        if (btSocket != null) {
+            try {
                 btSocket.getOutputStream().write("TO".toString().getBytes());
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 msg("Error");
             }
         }
     }
 
     // fast way to call Toast
-    private void msg(String s)
-    {
-        Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
+    private void msg(String s) {
+        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -214,48 +226,81 @@ public class ledControl extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "ledControl Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app URL is correct.
+                Uri.parse("android-app://com.led.led/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "ledControl Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app URL is correct.
+                Uri.parse("android-app://com.led.led/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
+        client.disconnect();
+    }
+
     private class ConnectBT extends AsyncTask<Void, Void, Void>  // UI thread
     {
         private boolean ConnectSuccess = true; //if it's here, it's almost connected
 
         @Override
-        protected void onPreExecute()
-        {
+        protected void onPreExecute() {
             progress = ProgressDialog.show(ledControl.this, "Connecting...", "Please wait!!!");  //show a progress dialog
         }
 
         @Override
         protected Void doInBackground(Void... devices) //while the progress dialog is shown, the connection is done in background
         {
-            try
-            {
-                if (btSocket == null || !isBtConnected)
-                {
+            try {
+                if (btSocket == null || !isBtConnected) {
                     myBluetooth = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
                     BluetoothDevice dispositivo = myBluetooth.getRemoteDevice(address);//connects to the device's address and checks if it's available
                     btSocket = dispositivo.createInsecureRfcommSocketToServiceRecord(myUUID);//create a RFCOMM (SPP) connection
                     BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                     btSocket.connect();//start connection
                 }
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 ConnectSuccess = false;//if the try failed, you can check the exception here
             }
             return null;
         }
+
         @Override
         protected void onPostExecute(Void result) //after the doInBackground, it checks if everything went fine
         {
             super.onPostExecute(result);
 
-            if (!ConnectSuccess)
-            {
+            if (!ConnectSuccess) {
                 msg("Connection Failed. Is it a SPP Bluetooth? Try again.");
                 finish();
-            }
-            else
-            {
+            } else {
                 msg("Connected.");
                 isBtConnected = true;
             }
