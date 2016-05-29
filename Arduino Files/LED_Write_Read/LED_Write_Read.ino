@@ -23,23 +23,43 @@ SoftwareSerial mySerial(6,5);
 
 void setup()
 {
-    Serial.begin(115200);
+    //Serial.begin(115200);
     mySerial.begin(115200);
     //  myCapacitiveSerial.begin(115200);
     pinMode(led, OUTPUT);
 
     //cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF);     // turn off autocalibrate on channel 1 - just as an example
 
-    int mean = 0;
-    int old_values[20];
-    for(int i=0;i<20;i++){
-        old_values[i] = 0;
-    }
+  // setup mean
+   int calibrate = 500;
+   
+   long sum = 0;
+   for(int i=0;i<calibrate;i++){
+      long total1 =  cs_4_2.capacitiveSensor(30);
+      sum = sum + total1;
+      /*Serial.print("\t gemessen: ");
+      Serial.print(total1);   
+      Serial.print("\t sum: ");
+      Serial.println(sum);  */
+   }
 
+     
+
+    long mean = sum/calibrate;
+    trigger = mean * 10;
+
+  
+    Serial.print("init:");       // check on performance in milliseconds
+    Serial.print("\t mean: ");                    // tab character for debug window spacing
+    Serial.print(mean);   
+    Serial.print("\t sum: ");
+    Serial.print(sum);
+    Serial.print("\t trigger: ");                    // tab character for debug window spacing
+    Serial.println(trigger);  
 }
 
 void loop(){
-    capacitive();
+    //capacitive();
     // myCapacitiveSerial.listen();
     //  while(myCapacitiveSerial.available() > 0){}
     //mySerial.listen();
@@ -71,7 +91,10 @@ void loop(){
         ledon = false;
         //  mySerial.println(string);
     }
-
+    mySerial.println("hello");
+    Serial.print("loop");
+    delay(1000);
+    /*
     if ((string.toInt()>=0)&&(string.toInt()<=255)){
         if (ledon==true){
             analogWrite(led, string.toInt());
@@ -79,6 +102,7 @@ void loop(){
             delay(10);
         }
     }
+    */
 }
 
 void ledOn(){
@@ -93,24 +117,25 @@ void ledOff(){
 
 void capacitive(){
     long start = millis();
-    long total1 =  cs_9_10.capacitiveSensor(30);
+    long total1 =  cs_4_2.capacitiveSensor(30);
     //long total2 =  cs_4_5.capacitiveSensor(30);
     //long total3 =  cs_4_8.capacitiveSensor(30);
 
     Serial.print(millis() - start);        // check on performance in milliseconds
-    Serial.print("\t");                    // tab character for debug window spacing
-
+    Serial.print("\t trigger: ");                    // tab character for debug window spacing
+    Serial.print(trigger);   
+    Serial.print("\t gemessen: ");
     Serial.println(total1);                  // print sensor output 1
-
-    if(total1 > 5000){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
-        Serial.println("treffer");
+    
+    if(total1 > trigger){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
+      Serial.println("treffer");
     }
     //Serial.print("\t");
     //Serial.print(total2);                  // print sensor output 2
     //Serial.print("\t");
     //.println(total3);                // print sensor output 3
 
-    delay(10);                             // arbitrary delay to limit data to serial port
+    delay(10);
 }
     
 
