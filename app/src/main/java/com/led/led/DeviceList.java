@@ -22,11 +22,9 @@ import java.util.Set;
 public class DeviceList extends ActionBarActivity {
     //widgets
     Button btnPaired;
-    ListView devicelist;
-    Button b_Button;
+    ListView deviceList;
     //Bluetooth
     private BluetoothAdapter myBluetooth = null;
-    private Set<BluetoothDevice> pairedDevices;
     public static String EXTRA_ADDRESS = "device_address";
 
     @Override
@@ -36,7 +34,7 @@ public class DeviceList extends ActionBarActivity {
 
         //Calling widgets
         btnPaired = (Button) findViewById(R.id.button);
-        devicelist = (ListView) findViewById(R.id.listView);
+        deviceList = (ListView) findViewById(R.id.listView);
 
         //if the device has bluetooth
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
@@ -59,11 +57,11 @@ public class DeviceList extends ActionBarActivity {
                 pairedDevicesList();
             }
         });
-
+        pairedDevicesList();
     }
 
     private void pairedDevicesList() {
-        pairedDevices = myBluetooth.getBondedDevices();
+        Set<BluetoothDevice> pairedDevices = myBluetooth.getBondedDevices();
         ArrayList list = new ArrayList();
 
         if (pairedDevices.size() > 0) {
@@ -75,8 +73,8 @@ public class DeviceList extends ActionBarActivity {
         }
 
         final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, list);
-        devicelist.setAdapter(adapter);
-        devicelist.setOnItemClickListener(myListClickListener); //Method called when the device from the list is clicked
+        deviceList.setAdapter(adapter);
+        deviceList.setOnItemClickListener(myListClickListener); //Method called when the device from the list is clicked
 
     }
 
@@ -87,7 +85,7 @@ public class DeviceList extends ActionBarActivity {
             String address = info.substring(info.length() - 17);
 
             // Make an intent to start next activity.
-            Intent i = new Intent(DeviceList.this, ledControl.class);
+            Intent i = new Intent(DeviceList.this, BTController.class);
 
             //Change the activity.
             i.putExtra(EXTRA_ADDRESS, address); //this will be received at ledControl (class) Activity
