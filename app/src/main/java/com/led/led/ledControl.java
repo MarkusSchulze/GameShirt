@@ -3,7 +3,6 @@ package com.led.led;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -24,11 +23,8 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -56,7 +52,7 @@ public class ledControl extends ActionBarActivity {
         super.onCreate(savedInstanceState);
 
         Intent newint = getIntent();
-        address = newint.getStringExtra(DeviceList.EXTRA_ADDRESS); //receive the address of the bluetooth device
+        address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS); //receive the address of the bluetooth device
 
         //view of the ledControl
         setContentView(R.layout.activity_led_control);
