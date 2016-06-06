@@ -78,19 +78,19 @@ public class PlayerSelection extends Activity {
                     BTConnection conn = new BTConnection();
                     if (conn.connect(bt)) {
                         myBlueComms.add(conn);
-                        ConnectSuccess = true;
+                        //ConnectSuccess = true;
                     } else {
-                        ConnectSuccess = false;
+                        //ConnectSuccess = false;
                     }
                     Thread.sleep(10000);
                 } catch (Exception e) {
                     msg(e.toString());
-                    ConnectSuccess = false;
+                    //ConnectSuccess = false;
                 }
                 ringProgressDialog.dismiss();
             }
         }).start();
-        return ConnectSuccess;
+        //return ConnectSuccess;
     }
 
     private class ConnectBT extends AsyncTask<BluetoothDevice, Void, Boolean> {  // UI thread
@@ -156,7 +156,15 @@ public class PlayerSelection extends Activity {
             BluetoothDevice bt = (BluetoothDevice) values.get(1);
             String address = bt.getAddress();
 
-            new ConnectBT().execute(bt); //Call the class to connect
+            try {
+                BTConnection conn = new BTConnection();
+                if (conn.connect(bt)) {
+                    myBlueComms.add(conn);
+                }
+            } catch (Exception e) {
+                msg(e.toString());
+            }
+            //new ConnectBT().execute(bt); //Call the class to connect
 
             //TODO Liste neu generieren und Einträge einfärben/disablen, dass man erkennen kann welche schon connected sind.
 
@@ -169,7 +177,10 @@ public class PlayerSelection extends Activity {
 
             //Change the activity.
             i.putExtra(EXTRA_ADDRESS, address); //this will be received at ledControl (class) Activity
-            startActivity(i);
+            if (PlayerSelection.myBlueComms != null){
+                startActivity(i);
+            }
+
         }
     };
 
