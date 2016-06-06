@@ -1,16 +1,9 @@
 package com.led.led;
 
-import android.app.ProgressDialog;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.SeekBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,19 +15,17 @@ import java.util.UUID;
  * Does all the Connection work with Bluetooth and creats a Thread that handles the Inputstream
  */
 public class BTConnection {
-    BluetoothDevice btDevice;
-    BluetoothSocket mmSocket;
-    boolean ConnectSuccess;
-    OutputStream mmOutputStream;
-    InputStream mmInputStream;
-    Thread workerThread;
-    byte[] readBuffer;
-    int readBufferPosition;
-    volatile boolean stopWorker;
-    // TextView inputText;  TODO
+    private BluetoothDevice btDevice;
+    private BluetoothSocket mmSocket;
+    private OutputStream mmOutputStream;
+    private InputStream mmInputStream;
+    private byte[] readBuffer;
+    private int readBufferPosition;
+    private volatile boolean stopWorker;
+    private String inputText;
 
     public boolean connect(BluetoothDevice bt) {
-        ConnectSuccess = true;
+        boolean connectSuccess = true;
         btDevice = bt;
         try {
             UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
@@ -44,14 +35,10 @@ public class BTConnection {
             mmInputStream = mmSocket.getInputStream();
         } catch (IOException e) {
             Log.d("BTFehler",e.toString());
-            ConnectSuccess = false;//if the try failed, you can check the exception here
+            connectSuccess = false;//if the try failed, you can check the exception here
         }
 
-        if (!ConnectSuccess) {
-            return false;
-        } else {
-            return true;
-        }
+        return connectSuccess;
     }
 
     public void beginListenForData() {
@@ -61,7 +48,7 @@ public class BTConnection {
         stopWorker = false;
         readBufferPosition = 0;
         readBuffer = new byte[1024];
-        workerThread = new Thread(new Runnable() {
+        Thread workerThread = new Thread(new Runnable() {
             public void run() {
                 while (!Thread.currentThread().isInterrupted() && !stopWorker) {
                     try {
@@ -80,7 +67,7 @@ public class BTConnection {
 
                                     handler.post(new Runnable() {
                                         public void run() {
-                                            //inputText.setText(data); TODO
+                                            inputText = data;
                                         }
                                     });
                                 } else {
@@ -106,11 +93,14 @@ public class BTConnection {
         return btDevice.getAddress();
     }
 
+    public String getInputText() {
+        return inputText;
+    }
+
     public void closeBT() throws IOException {
         stopWorker = true;
         mmOutputStream.close();
         mmInputStream.close();
         mmSocket.close();
-        //inputText.setText(R.string.BT_Closed); TODO
     }
 }

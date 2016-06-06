@@ -1,4 +1,4 @@
-package com.led.led.Archiv;
+package com.led.led.archive;
 
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
@@ -34,7 +34,7 @@ import java.util.UUID;
 
 public class ledControl extends ActionBarActivity {
 
-    Button btnOn, btnOff, btnDis, btnUpdate;
+    Button btnOn, btnOff, btnDis;
     SeekBar brightness;
     TextView lumn, inputText;
     String address = null;
@@ -89,13 +89,6 @@ public class ledControl extends ActionBarActivity {
             @Override
             public void onClick(View v) {
                 Disconnect(); //close connection
-            }
-        });
-
-        btnUpdate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Update(); //update Textbox
             }
         });
 
@@ -221,47 +214,6 @@ public class ledControl extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "ledControl Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://com.led.led/http/host/path")
-        );
-        AppIndex.AppIndexApi.start(client, viewAction);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "ledControl Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://com.led.led/http/host/path")
-        );
-        AppIndex.AppIndexApi.end(client, viewAction);
-        client.disconnect();
-    }
-
 
     public void launchRingDialog(View view, final BluetoothDevice bt) {
         final ProgressDialog ringProgressDialog = ProgressDialog.show(ledControl.this, "Connecting...", "Please wait!!!", true);

@@ -15,11 +15,10 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 class ListViewAdapter extends BaseAdapter{
-
-    public ArrayList<ArrayList<Object>> list;
-    Activity activity;
-    TextView txtFirst;
-    TextView txtSecond;
+    private final ArrayList<ArrayList<Object>> list;
+    private final Activity activity;
+    private TextView txtFirst;
+    private TextView txtSecond;
     public ListViewAdapter(Activity activity,ArrayList<ArrayList<Object>> list){
         super();
         this.activity=activity;
@@ -28,19 +27,16 @@ class ListViewAdapter extends BaseAdapter{
 
     @Override
     public int getCount() {
-        // TODO Auto-generated method stub
         return list.size();
     }
 
     @Override
     public Object getItem(int position) {
-        // TODO Auto-generated method stub
         return list.get(position);
     }
 
     @Override
     public long getItemId(int position) {
-        // TODO Auto-generated method stub
         return 0;
     }
 

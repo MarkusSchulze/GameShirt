@@ -25,7 +25,11 @@
             android:label="@string/BT_Action" >
         </activity>
         <activity
-            android:name=".Archiv.ledControl"
+            android:name=".archive.ledControl"
+            android:label="@string/BT_Action" >
+        </activity>
+        <activity
+            android:name=".archive.BTTest"
             android:label="@string/BT_Action" >
         </activity>
     </application>

@@ -1,17 +1,8 @@
 package com.led.led;
 
-import android.app.ProgressDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -19,32 +10,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Created by Maggi on 01.06.2016.
- * gets the BlueTooth device from the device list and connects to it. Can handle all data transfer via BT
+ * gets the BlueTooth connection from the PlayerSelection. Testclass to get the data transfer going.
  */
 public class BTController extends ActionBarActivity {
-    private ProgressDialog progress;
-    BluetoothSocket mmSocket= null;
-    BluetoothAdapter myBluetooth;
-    BluetoothDevice mmDevice;
-    OutputStream mmOutputStream;
-    String address = null;
-    InputStream mmInputStream;
-    Thread workerThread;
-    byte[] readBuffer;
-    int readBufferPosition;
-    volatile boolean stopWorker;
-    ArrayList<Object> values;
-    Button btnOn, btnOff, btnDis;
-    SeekBar brightness;
-    TextView lumn, inputText;
+    private OutputStream mmOutputStream;
+    private BTConnection btConn;
+    private String address = null;
+    private Button btnOn, btnOff, btnDis;
+    private SeekBar brightness;
+    private TextView lumn, inputText;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,10 +32,11 @@ public class BTController extends ActionBarActivity {
         //Versuche die richtige BT-Verbindung in der Arraylist von Playerselection zu finden
         for (int i=0;i<PlayerSelection.myBlueComms.size();i++){
             if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())){
-                PlayerSelection.myBlueComms.get(i).beginListenForData();
-                mmSocket = PlayerSelection.myBlueComms.get(i).getMmSocket();
+                btConn = PlayerSelection.myBlueComms.get(i);
+                btConn.beginListenForData();
+                btConn.getInputText();
                 try {
-                    mmOutputStream = mmSocket.getOutputStream();
+                    mmOutputStream = btConn.getMmSocket().getOutputStream();
                 } catch (IOException e) {
                     msg(e.toString());
                     finish();
@@ -66,7 +45,7 @@ public class BTController extends ActionBarActivity {
             }
         }
 
-        if (mmSocket==null){
+        if (btConn==null){
             msg("Something went wrong");
             finish();
         }
@@ -101,7 +80,7 @@ public class BTController extends ActionBarActivity {
         btnDis.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    mmSocket.close(); //close connection
+                    btConn.closeBT(); //close connection
                 } catch (IOException e) {
                     msg("Error");
                 }
@@ -142,6 +121,7 @@ public class BTController extends ActionBarActivity {
     private void turnOffLed() {
         try {
             mmOutputStream.write("TF".getBytes());
+            inputText.setText(btConn.getInputText());
         } catch (IOException e) {
             msg(e.toString());
         }
@@ -150,10 +130,9 @@ public class BTController extends ActionBarActivity {
     private void turnOnLed() {
         try {
             mmOutputStream.write("TO".getBytes());
+            inputText.setText(btConn.getInputText());
         } catch (IOException e) {
             msg(e.toString());
         }
     }
-
-
 }

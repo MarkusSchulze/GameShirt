@@ -1,4 +1,4 @@
-package com.led.led.Archiv;
+package com.led.led.archive;
 
 /**
  * Created by Maggi on 29.05.2016.
@@ -35,7 +35,6 @@ public class BTTest extends Activity {
     Thread workerThread;
     byte[] readBuffer;
     int readBufferPosition;
-    int counter;
     volatile boolean stopWorker;
 
     @Override

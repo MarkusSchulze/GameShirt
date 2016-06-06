@@ -2,32 +2,28 @@ package com.led.led;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.speech.tts.Voice;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.UUID;
 
 
 public class PlayerSelection extends Activity {
     public static String EXTRA_ADDRESS = "device_address";
     //widgets
-    Button btnPaired;
-    ListView deviceList;
+    private Button btnPaired;
+    private ListView deviceList;
     //Bluetooth
     private BluetoothDevice bt;
     public static ArrayList<BTConnection> myBlueComms;
@@ -112,13 +108,13 @@ public class PlayerSelection extends Activity {
 
     private void pairedDevicesList() {
         Set<BluetoothDevice> pairedDevices = myBluetooth.getBondedDevices();
-        ArrayList values = new ArrayList();
+        ArrayList<Object> values = new ArrayList<>();
         ArrayList<ArrayList<Object>> list = new ArrayList<>();
 
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice bt : pairedDevices) {
-                values.add(bt.getName());
-                values.add(bt);
+                values.add(bt.getName());   //Name of the Bluetooth device
+                values.add(bt);             //actual BT device. Will be shown as the MAC Adress of the device
                 list.add(values);
             }
         } else {
@@ -132,20 +128,10 @@ public class PlayerSelection extends Activity {
 
     private AdapterView.OnItemClickListener myListClickListener = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> rowList, View v, int position, long arg3) {
-            //av.getItemAtPosition()
-            // final String item = (String) parent.getItemAtPosition(position);
             ArrayList<Object> values = (ArrayList<Object>) rowList.getItemAtPosition(position);
             //String name = (String) values.get(0);
             bt = (BluetoothDevice) values.get(1);
 
-//            try {
-//                BTConnection conn = new BTConnection();
-//                if (conn.connect(bt)) {
-//                    myBlueComms.add(conn);
-//                }
-//            } catch (Exception e) {
-//                msg(e.toString());
-//            }
             new ConnectBT().execute(); //Call the class to connect
 
             //TODO Liste neu generieren und Einträge einfärben/disablen, dass man erkennen kann welche schon connected sind.
@@ -176,7 +162,7 @@ public class PlayerSelection extends Activity {
     }
 
     // fast way to call Toast
-    public void msg(String s) {
+    private void msg(String s) {
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
     }
 }
