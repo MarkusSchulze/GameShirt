@@ -54,6 +54,7 @@ public class BTController extends ActionBarActivity {
         //Versuche die richtige BT-Verbindung in der Arraylist von Playerselection zu finden
         for (int i=0;i<PlayerSelection.myBlueComms.size();i++){
             if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())){
+                PlayerSelection.myBlueComms.get(i).beginListenForData();
                 mmSocket = PlayerSelection.myBlueComms.get(i).getMmSocket();
                 try {
                     mmOutputStream = mmSocket.getOutputStream();
@@ -99,6 +100,11 @@ public class BTController extends ActionBarActivity {
 
         btnDis.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                try {
+                    mmSocket.close(); //close connection
+                } catch (IOException e) {
+                    msg("Error");
+                }
                 finish();
             }
         });

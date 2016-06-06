@@ -23,11 +23,6 @@ import java.util.UUID;
  */
 public class BTConnection {
     BluetoothDevice btDevice;
-
-    public BluetoothSocket getMmSocket() {
-        return mmSocket;
-    }
-
     BluetoothSocket mmSocket;
     boolean ConnectSuccess;
     OutputStream mmOutputStream;
@@ -48,21 +43,20 @@ public class BTConnection {
             mmOutputStream = mmSocket.getOutputStream();
             mmInputStream = mmSocket.getInputStream();
         } catch (IOException e) {
+            Log.d("BTFehler",e.toString());
             ConnectSuccess = false;//if the try failed, you can check the exception here
         }
 
         if (!ConnectSuccess) {
             return false;
         } else {
-            beginListenForData();
             return true;
         }
     }
 
-    void beginListenForData() {
+    public void beginListenForData() {
         final Handler handler = new Handler();
         final byte delimiter = 10; //This is the ASCII code for a newline character
-
 
         stopWorker = false;
         readBufferPosition = 0;
@@ -102,6 +96,10 @@ public class BTConnection {
         });
 
         workerThread.start();
+    }
+
+    public BluetoothSocket getMmSocket() {
+        return mmSocket;
     }
 
     public String getAddress(){

@@ -1,4 +1,4 @@
-package com.led.led;
+package com.led.led.Archiv;
 
 /**
  * Created by Maggi on 29.05.2016.
@@ -15,6 +15,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.Button;
+
+import com.led.led.R;
 
 import java.io.IOException;
 import java.io.InputStream;

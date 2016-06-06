@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.tts.Voice;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,6 +29,7 @@ public class PlayerSelection extends Activity {
     Button btnPaired;
     ListView deviceList;
     //Bluetooth
+    private BluetoothDevice bt;
     public static ArrayList<BTConnection> myBlueComms;
     private BluetoothAdapter myBluetooth = null;
     //Loading bar for connecting
@@ -43,6 +45,7 @@ public class PlayerSelection extends Activity {
         deviceList = (ListView) findViewById(R.id.listView);
 
         //if the device has bluetooth
+        myBlueComms = new ArrayList<>();
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
 
         if (myBluetooth == null) {
@@ -66,34 +69,7 @@ public class PlayerSelection extends Activity {
         pairedDevicesList();
     }
 
-    public void launchRingDialog(View view, final BluetoothDevice bt) {
-        final ProgressDialog ringProgressDialog = ProgressDialog.show(PlayerSelection.this, "Connecting...", "Please wait!!!", true);
-        ringProgressDialog.setCancelable(true);
-        boolean ConnectSuccess = true;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                try {
-                    BTConnection conn = new BTConnection();
-                    if (conn.connect(bt)) {
-                        myBlueComms.add(conn);
-                        //ConnectSuccess = true;
-                    } else {
-                        //ConnectSuccess = false;
-                    }
-                    Thread.sleep(10000);
-                } catch (Exception e) {
-                    msg(e.toString());
-                    //ConnectSuccess = false;
-                }
-                ringProgressDialog.dismiss();
-            }
-        }).start();
-        //return ConnectSuccess;
-    }
-
-    private class ConnectBT extends AsyncTask<BluetoothDevice, Void, Boolean> {  // UI thread
+    private class ConnectBT extends AsyncTask<Void, Void, Void> {  // UI thread
         boolean ConnectSuccess = true; //if it's here, it's almost connected
 
         @Override
@@ -102,9 +78,9 @@ public class PlayerSelection extends Activity {
         }
 
         @Override
-        protected Boolean doInBackground(BluetoothDevice... bt) {
+        protected Void doInBackground(Void... devices) {
             BTConnection conn = new BTConnection();
-            if (conn.connect(bt[0])) {
+            if (conn.connect(bt)) {
                 myBlueComms.add(conn);
                 ConnectSuccess = true;
             } else {
@@ -114,14 +90,21 @@ public class PlayerSelection extends Activity {
         }
 
         @Override
-        protected void onPostExecute(Boolean result) //after the doInBackground, it checks if everything went fine
+        protected void onPostExecute(Void result) //after the doInBackground, it checks if everything went fine
         {
             super.onPostExecute(result);
             if (!ConnectSuccess) {
                 msg("Connection Failed. Is it a SPP Bluetooth? Try again.");
             } else {
                 msg("Connected.");
+                // Make an intent to start next activity.
+                Intent i = new Intent(PlayerSelection.this, BTController.class);
 
+                //Change the activity.
+                String address = bt.getAddress();
+                i.putExtra(EXTRA_ADDRESS, address); //this will be received at ledControl (class) Activity
+
+                startActivity(i);
             }
             progress.dismiss();
         }
@@ -153,34 +136,19 @@ public class PlayerSelection extends Activity {
             // final String item = (String) parent.getItemAtPosition(position);
             ArrayList<Object> values = (ArrayList<Object>) rowList.getItemAtPosition(position);
             //String name = (String) values.get(0);
-            BluetoothDevice bt = (BluetoothDevice) values.get(1);
-            String address = bt.getAddress();
+            bt = (BluetoothDevice) values.get(1);
 
-            try {
-                BTConnection conn = new BTConnection();
-                if (conn.connect(bt)) {
-                    myBlueComms.add(conn);
-                }
-            } catch (Exception e) {
-                msg(e.toString());
-            }
-            //new ConnectBT().execute(bt); //Call the class to connect
+//            try {
+//                BTConnection conn = new BTConnection();
+//                if (conn.connect(bt)) {
+//                    myBlueComms.add(conn);
+//                }
+//            } catch (Exception e) {
+//                msg(e.toString());
+//            }
+            new ConnectBT().execute(); //Call the class to connect
 
             //TODO Liste neu generieren und Einträge einfärben/disablen, dass man erkennen kann welche schon connected sind.
-
-            // Get the device MAC address, the last 17 chars in the View
-            //String info = ((TextView) v).getText().toString();
-            //String address = info.substring(info.length() - 17);
-
-            // Make an intent to start next activity.
-            Intent i = new Intent(PlayerSelection.this, BTController.class);
-
-            //Change the activity.
-            i.putExtra(EXTRA_ADDRESS, address); //this will be received at ledControl (class) Activity
-            if (PlayerSelection.myBlueComms != null){
-                startActivity(i);
-            }
-
         }
     };
 

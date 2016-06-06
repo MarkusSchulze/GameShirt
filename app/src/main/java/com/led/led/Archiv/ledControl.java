@@ -1,4 +1,4 @@
-package com.led.led;
+package com.led.led.Archiv;
 
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
@@ -21,6 +21,9 @@ import android.os.AsyncTask;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.led.led.BTConnection;
+import com.led.led.PlayerSelection;
+import com.led.led.R;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -258,6 +261,35 @@ public class ledControl extends ActionBarActivity {
         AppIndex.AppIndexApi.end(client, viewAction);
         client.disconnect();
     }
+
+
+    public void launchRingDialog(View view, final BluetoothDevice bt) {
+        final ProgressDialog ringProgressDialog = ProgressDialog.show(ledControl.this, "Connecting...", "Please wait!!!", true);
+        ringProgressDialog.setCancelable(true);
+        boolean ConnectSuccess = true;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    BTConnection conn = new BTConnection();
+                    if (conn.connect(bt)) {
+                        //myBlueComms.add(conn);
+                        //ConnectSuccess = true;
+                    } else {
+                        //ConnectSuccess = false;
+                    }
+                    Thread.sleep(10000);
+                } catch (Exception e) {
+                    msg(e.toString());
+                    //ConnectSuccess = false;
+                }
+                ringProgressDialog.dismiss();
+            }
+        }).start();
+        //return ConnectSuccess;
+    }
+
 
     private class ConnectBT extends AsyncTask<Void, Void, Void>  // UI thread
     {
