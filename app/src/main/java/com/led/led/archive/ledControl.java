@@ -1,6 +1,5 @@
 package com.led.led.archive;
 
-import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -18,7 +17,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.os.AsyncTask;
 
-import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.led.led.BTConnection;
@@ -58,7 +56,7 @@ public class ledControl extends ActionBarActivity {
         address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS); //receive the address of the bluetooth device
 
         //view of the ledControl
-        setContentView(R.layout.activity_led_control);
+        setContentView(R.layout.activity_game_screen);
 
         //call the widgtes
         btnOn = (Button) findViewById(R.id.button2);

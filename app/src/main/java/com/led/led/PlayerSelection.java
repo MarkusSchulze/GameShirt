@@ -34,7 +34,7 @@ public class PlayerSelection extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_device_list);
+        setContentView(R.layout.activity_player_selection);
 
         //Calling widgets
         btnPaired = (Button) findViewById(R.id.button);
@@ -94,7 +94,7 @@ public class PlayerSelection extends Activity {
             } else {
                 msg("Connected.");
                 // Make an intent to start next activity.
-                Intent i = new Intent(PlayerSelection.this, BTController.class);
+                Intent i = new Intent(PlayerSelection.this, GameScreen.class);
 
                 //Change the activity.
                 String address = bt.getAddress();

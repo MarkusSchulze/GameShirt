@@ -2,6 +2,7 @@ package com.led.led;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.Button;
@@ -16,19 +17,17 @@ import java.io.OutputStream;
  * Created by Maggi on 01.06.2016.
  * gets the BlueTooth connection from the PlayerSelection. Testclass to get the data transfer going.
  */
-public class BTController extends ActionBarActivity {
+public class GameScreen extends ActionBarActivity {
     private OutputStream mmOutputStream;
     private BTConnection btConn;
-    private String address = null;
-    private Button btnOn, btnOff, btnDis;
-    private SeekBar brightness;
-    private TextView lumn, inputText;
+    private TextView lumn, inputText1, inputText2;
+    private final long startTime = System.currentTimeMillis();
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Intent newint = getIntent();
-        address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS); //receive the address of the bluetooth device
+        String address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS);
         //Versuche die richtige BT-Verbindung in der Arraylist von Playerselection zu finden
         for (int i=0;i<PlayerSelection.myBlueComms.size();i++){
             if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())){
@@ -51,14 +50,15 @@ public class BTController extends ActionBarActivity {
         }
 
         //view of the ledControl
-        setContentView(R.layout.activity_led_control);
+        setContentView(R.layout.activity_game_screen);
 
         //call the widgtes
-        btnOn = (Button) findViewById(R.id.button2);
-        btnOff = (Button) findViewById(R.id.button3);
-        btnDis = (Button) findViewById(R.id.button4);
-        inputText = (TextView) findViewById(R.id.textView4);
-        brightness = (SeekBar) findViewById(R.id.seekBar);
+        Button btnOn = (Button) findViewById(R.id.button2);
+        Button btnOff = (Button) findViewById(R.id.button3);
+        Button btnDis = (Button) findViewById(R.id.button4);
+        inputText1 = (TextView) findViewById(R.id.textView4);
+        inputText2 = (TextView) findViewById(R.id.textView5);
+        SeekBar brightness = (SeekBar) findViewById(R.id.seekBar);
         lumn = (TextView) findViewById(R.id.lumn);
 
 
@@ -79,11 +79,11 @@ public class BTController extends ActionBarActivity {
 
         btnDis.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                try {
-                    btConn.closeBT(); //close connection
-                } catch (IOException e) {
-                    msg("Error");
-                }
+//                try {
+//                    btConn.closeBT(); //close connection
+//                } catch (IOException e) {
+//                    msg("Error");
+//                }
                 finish();
             }
         });
@@ -111,6 +111,8 @@ public class BTController extends ActionBarActivity {
 
             }
         });
+
+        startTimer();
     }
 
     // fast way to call Toast
@@ -121,7 +123,14 @@ public class BTController extends ActionBarActivity {
     private void turnOffLed() {
         try {
             mmOutputStream.write("TF".getBytes());
-            inputText.setText(btConn.getInputText());
+            for (int i = 0;i < PlayerSelection.myBlueComms.size(); i++){
+                if (i==0){
+                    inputText1.setText(PlayerSelection.myBlueComms.get(i).getInputText());
+                }else{
+                    inputText2.setText(PlayerSelection.myBlueComms.get(i).getInputText());
+                }
+            }
+
         } catch (IOException e) {
             msg(e.toString());
         }
@@ -130,9 +139,34 @@ public class BTController extends ActionBarActivity {
     private void turnOnLed() {
         try {
             mmOutputStream.write("TO".getBytes());
-            inputText.setText(btConn.getInputText());
+            inputText2.setText(btConn.getInputText());
         } catch (IOException e) {
             msg(e.toString());
         }
+    }
+
+    private void startTimer(){
+        final Handler timerHandler = new Handler();
+        new Runnable() {
+            @Override
+            public void run() {
+                long millis = System.currentTimeMillis() - startTime;
+                int seconds = (int) (millis / 1000);
+                int minutes = seconds / 60;
+                seconds = seconds % 60;
+
+                //timerTextView.setText(String.format("%d:%02d", minutes, seconds));
+
+                timerHandler.postDelayed(this, 500);
+            }
+        };
+    }
+
+    private void selectFieldToHit(){        //TODO
+
+    }
+
+    private int detectHit(){            //TODO
+        return 0;
     }
 }

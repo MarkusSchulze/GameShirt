@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".BTController"
+            android:name=".GameScreen"
             android:label="@string/BT_Action" >
         </activity>
         <activity
