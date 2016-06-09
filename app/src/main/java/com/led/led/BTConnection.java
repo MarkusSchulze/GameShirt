@@ -94,7 +94,11 @@ public class BTConnection {
     }
 
     public String getInputText() {
-        return inputText;
+        if (inputText != null){
+            return inputText;
+        }else{
+            return "";
+        }
     }
 
     public void closeBT() throws IOException {

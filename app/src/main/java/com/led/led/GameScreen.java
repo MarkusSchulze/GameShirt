@@ -116,8 +116,6 @@ public class GameScreen extends ActionBarActivity {
 
             }
         });
-
-        startTimer();
     }
 
     // fast way to call Toast
@@ -127,15 +125,8 @@ public class GameScreen extends ActionBarActivity {
 
     private void turnOffLed() {
         try {
-            mmOutputStream.write("TF".getBytes());
-            for (int i = 0; i < PlayerSelection.myBlueComms.size(); i++) {
-                if (i == 0) {
-                    inputText1.setText(PlayerSelection.myBlueComms.get(i).getInputText());
-                } else {
-                    inputText2.setText(PlayerSelection.myBlueComms.get(i).getInputText());
-                }
-            }
-
+            inputText2.setText(btConn.getInputText());
+            mmOutputStream.write("zone1off".getBytes());
         } catch (IOException e) {
             msg(e.toString());
         }
@@ -143,32 +134,39 @@ public class GameScreen extends ActionBarActivity {
 
     private void turnOnLed() {
         try {
-            mmOutputStream.write("TO".getBytes());
-            inputText2.setText(btConn.getInputText());
+            mmOutputStream.write("zone1on".getBytes());
         } catch (IOException e) {
             msg(e.toString());
         }
+        startTimer();
+//        try {
+//            mmOutputStream.write("TO".getBytes());
+//            inputText2.setText(btConn.getInputText());
+//        } catch (IOException e) {
+//            msg(e.toString());
+//        }
     }
 
     private void startTimer() {
         final Handler timerHandler = new Handler();
-        new Runnable() {
+        Runnable timerRunnable = new Runnable() {
             @Override
             public void run() {
                 long millis = System.currentTimeMillis() - startTime;
                 int seconds = (int) (millis / 1000);
-                int minutes = seconds / 60;
                 seconds = seconds % 60;
 
-                Log.d("Timer", String.valueOf(seconds));
-                if (seconds % 3 == 0) {
+                //Log.d("Timer", String.valueOf(seconds));
+
+                if (millis % 3 == 0) {
                     selectZoneToHit();
                 }
                 detectHit();
 
-                timerHandler.postDelayed(this, 500);
+                timerHandler.postDelayed(this, 1000);
             }
         };
+        timerHandler.postDelayed(timerRunnable, 0);
     }
 
     private void selectZoneToHit() {
@@ -178,6 +176,7 @@ public class GameScreen extends ActionBarActivity {
         String msg = "zone" + String.valueOf(randomInt) + "on";
         for (BTConnection bt : PlayerSelection.myBlueComms) {
             try {
+                Log.d("send", msg);
                 bt.getMmSocket().getOutputStream().write(msg.getBytes());
             } catch (IOException e) {
                 msg(e.toString());
@@ -190,6 +189,7 @@ public class GameScreen extends ActionBarActivity {
         zones[zone] = false;
         for (BTConnection bt : PlayerSelection.myBlueComms) {
             try {
+                Log.d("send", msg);
                 bt.getMmSocket().getOutputStream().write(msg.getBytes());
             } catch (IOException e) {
                 msg(e.toString());
@@ -204,27 +204,27 @@ public class GameScreen extends ActionBarActivity {
             Log.d("HitDetection", bt.getInputText());
             switch (bt.getInputText()) {
                 case "hit1":
-                    if (zones[1]) {
+                    if (zones[0]) {
                         Log.d("Treffer1", "true");
-                        zoneOff(1);
+                        zoneOff(0);
                     }
                     break;
                 case "hit2":
-                    if (zones[2]) {
+                    if (zones[1]) {
                         Log.d("Treffer2", "true");
-                        zoneOff(2);
+                        zoneOff(0);
                     }
                     break;
                 case "hit3":
-                    if (zones[3]) {
+                    if (zones[2]) {
                         Log.d("Treffer3", "true");
-                        zoneOff(3);
+                        zoneOff(2);
                     }
                     break;
                 case "hit4":
-                    if (zones[4]) {
+                    if (zones[3]) {
                         Log.d("Treffer4", "true");
-                        zoneOff(4);
+                        zoneOff(3);
                     }
                     break;
             }
