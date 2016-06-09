@@ -4,22 +4,45 @@
 /*
  * CapitiveSense Library Demo Sketch
  * Paul Badger 2008
- * Uses a high value resistor e.g. 10 megohm between send pin and receive pin
+ * Uses a high value resistor e.g. 10 megohm between send pin and receive pinledon
  * Resistor effects sensitivity, experiment with values, 50 kilohm - 50 megohm. Larger resistor values yield larger sensor values.
  * Receive pin is the sensor pin - try different amounts of foil/metal on this pin
  * Best results are obtained if sensor foil and wire is covered with an insulator such as paper or plastic sheet
  */
 
-
+//Globale Variablen
 CapacitiveSensor   cs_9_10 = CapacitiveSensor(9,10);        // 10 megohm resistor between pins 4 & 2, pin 2 is sensor pin, add wire, foil
-CapacitiveSensor   cs_4_5 = CapacitiveSensor(4,5);        // 10 megohm resistor between pins 4 & 6, pin 6 is sensor pin, add wire, foil
-CapacitiveSensor   cs_4_8 = CapacitiveSensor(4,8);        // 10 megohm resistor between pins 4 & 8, pin 8 is sensor pin, add wire, foil
+CapacitiveSensor   cs_3_4 = CapacitiveSensor(3,4);        // 10 megohm resistor between pins 4 & 6, pin 6 is sensor pin, add wire, foil
+//CapacitiveSensor   cs_4_8 = CapacitiveSensor(4,8);        // 10 megohm resistor between pins 4 & 8, pin 8 is sensor pin, add wire, foil
 char command;
 String string;
-boolean ledon = false;
-long trigger;
-#define led 3
+int hitcooldown = 0;
+#define led1 A0
+#define led2 A1
 SoftwareSerial mySerial(6,5);
+
+//Globale Einstellungen
+int cycle_delay = 100; //delay pro schleifen durchlauf, in milli secs
+int led_shutdown_blink_time = 1000; // how long should a LED blink after receiving shutdown message, in milli secs
+int hitcooldown_length = 500; //amount of cycles hits wont be detected after a hit, in milli secs
+int calibrate = 2; //how often should we measure the mean value
+
+
+//LED 1 States
+boolean led1on = false;
+int led1_blink_timer = 0;
+boolean led1_blink_state = false;
+
+//LED 2 States
+boolean led2on = false;
+int led2_blink_timer = 0;
+boolean led2_blink_state = false;
+
+//Schwellenwerte fuer Hit Detection
+long trigger;
+long trigger2;
+
+
 //SoftwareSerial myCapacitiveSerial(10,9);
 
 void setup()
@@ -27,7 +50,8 @@ void setup()
     Serial.begin(115200);
     mySerial.begin(115200);
     //  myCapacitiveSerial.begin(115200);
-    pinMode(led, OUTPUT);
+    pinMode(led1, OUTPUT);
+    pinMode(led2,OUTPUT);
 
     //cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF);     // turn off autocalibrate on channel 1 - just as an example
 
@@ -35,33 +59,47 @@ void setup()
   
   // setup mean
   if(true){
-   int calibrate = 500;
-   
+   Serial.print("init:"); 
    long sum = 0;
+   long sum2 = 0;
    for(int i=0;i<calibrate;i++){
       long total1 =  cs_9_10.capacitiveSensor(30);
+      long total2 = cs_3_4.capacitiveSensor(30);
       sum = sum + total1;
-      
+      sum2 = sum2 + total2;
+       Serial.print(sum);
    }
 
      
-
+    
     long mean = sum/calibrate;
+    long mean2 = sum2/calibrate;
     trigger = mean * 10;
+    trigger2 = mean2 * 10;
 
   
-    Serial.print("init:");       // check on performance in milliseconds
+          // check on performance in milliseconds
     Serial.print("\t mean: ");                    // tab character for debug window spacing
     Serial.print(mean);   
     Serial.print("\t sum: ");
     Serial.print(sum);
     Serial.print("\t trigger: ");                    // tab character for debug window spacing
     Serial.println(trigger);  
+    Serial.print("\t trigger2: ");
+    Serial.println(trigger2);
   }
 }
 
 void loop(){
     capacitive();
+    capacitive2();
+
+    //global delay per cycle
+    //delay(cycle_delay);
+    
+    //small deactivation of zone after hitting it, to prevent one hit counting twice
+    hitcooldown = hitcooldown - cycle_delay;
+    
     // myCapacitiveSerial.listen();
     //  while(myCapacitiveSerial.available() > 0){}
     //mySerial.listen();
@@ -83,40 +121,106 @@ void loop(){
         delay(1);
     }
 
+    //debug LED tests
     if(string =="TO"){
-        ledOn();
-        ledon = true;
+        led1On();
+        led2On();
+        led1on = true;
     }
 
     if(string =="TF"){
-        ledOff();
-        ledon = false;
+        led1Off();
+        led2Off();
+        led1on = false;
         //  mySerial.println(string);
     }
-    mySerial.println("hello");
+
+    //zone control from app
+    if(string =="zone1on"){
+        led1On();
+    }
+    if(string =="zone2on"){
+        led2On();
+    }
+    if(string =="zone1off"){
+        led1Off_countdown();
+    }
+    if(string =="zone2off"){
+        led2Off_countdown();
+    }
+    //mySerial.println("hello");
     //Serial.print("loop");
     Serial.println(string);
     
-    delay(1000);
+    //make LEDs blink for 1 sec once they are shut down by app
+    if (led1_blink_timer > 0){
+      if(led1_blink_state){
+        led1_blink_state = false;
+        analogWrite(led1, 0);
+      }else{
+        led1_blink_state = true;
+        analogWrite(led1, 255);
+      }
+      led1_blink_timer = led1_blink_timer - cycle_delay;
+    }
+    if (led2_blink_timer > 0){
+      if(led2_blink_state){
+        led2_blink_state = false;
+        analogWrite(led2, 0);
+      }else{
+        led2_blink_state = true;
+        analogWrite(led2, 255);
+      }
+      led2_blink_timer = led2_blink_timer - cycle_delay;
+    }
+
+    //bluetooth debug message
+    mySerial.println("hit1");
     
-    if ((string.toInt()>=0)&&(string.toInt()<=255)){
+  /*  if ((string.toInt()>=0)&&(string.toInt()<=255)){
         if (ledon==true){
             analogWrite(led, string.toInt());
             // mySerial.println(string);
             delay(10);
         }
-    }
+    }*/
     
 }
 
-void ledOn(){
-    analogWrite(led, 255);
+void led1On(){
+    analogWrite(led1, 255);
     delay(10);
+    Serial.println("zone 1 on");
+    led1on = true;
 }
 
-void ledOff(){
-    analogWrite(led, 0);
+void led1Off(){
+    analogWrite(led1, 0);
     delay(10);
+    Serial.println("zone 1 off");
+    led1on = false;
+}
+
+void led1Off_countdown(){
+    led1_blink_timer = led_shutdown_blink_time;
+}
+
+void led2On(){
+    analogWrite(led2, 255);
+    delay(10);
+    Serial.println("zone 2 on");
+    led2on = true;
+}
+
+void led2Off(){
+    analogWrite(led2, 0);
+    delay(10);
+    Serial.println("zone 2 not off");
+    led2on = false;
+}
+
+void led2Off_countdown(){
+    led2_blink_timer = led_shutdown_blink_time;
 }
 
 void capacitive(){
@@ -131,16 +235,49 @@ void capacitive(){
     Serial.print("\t gemessen: ");
     Serial.println(total1);                  // print sensor output 1
     
-    if(total1 > trigger){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
+    if(total1 > trigger && led1on && hitcooldown <= 0){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
       Serial.println("hit1");
       mySerial.println("hit1");
+      hitcooldown = hitcooldown_length;
+    }else{
+      //mySerial.println("no hit");
     }
     //Serial.print("\t");
     //Serial.print(total2);                  // print sensor output 2
     //Serial.print("\t");
     //.println(total3);                // print sensor output 3
 
-    delay(10);
+    //delay(500);
+    delay(cycle_delay/2);
 }
+void capacitive2(){
+    long start = millis();
+    long total1 =  cs_3_4.capacitiveSensor(30);
+    //long total2 =  cs_4_5.capacitiveSensor(30);
+    //long total3 =  cs_4_8.capacitiveSensor(30);
+
+    Serial.print(millis() - start);        // check on performance in milliseconds
+    Serial.print("\t trigger2: ");                    // tab character for debug window spacing
+    Serial.print(trigger2);   
+    Serial.print("\t gemessen: ");
+    Serial.println(total1);                  // print sensor output 1
+    
+    if(total1 > trigger2  && led2on && hitcooldown <= 0){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
+      Serial.println("hit2");
+      mySerial.println("hit2");
+      hitcooldown = hitcooldown_length;
+      
+    }else{
+      //mySerial.println("no hit2");
+    }
+    //Serial.print("\t");
+    //Serial.print(total2);                  // print sensor output 2
+    //Serial.print("\t");
+    //.println(total3);                // print sensor output 3
+
+    //delay(500);
+    delay(cycle_delay/2);
+}
+    
     
 
