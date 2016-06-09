@@ -16,6 +16,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 
@@ -108,14 +110,16 @@ public class PlayerSelection extends Activity {
 
     private void pairedDevicesList() {
         Set<BluetoothDevice> pairedDevices = myBluetooth.getBondedDevices();
-        ArrayList<Object> values = new ArrayList<>();
         ArrayList<ArrayList<Object>> list = new ArrayList<>();
 
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice bt : pairedDevices) {
+                ArrayList<Object> values = new ArrayList<>();
                 values.add(bt.getName());   //Name of the Bluetooth device
                 values.add(bt);             //actual BT device. Will be shown as the MAC Adress of the device
+                //List<Object> places = Arrays.asList(bt.getName(),bt);
                 list.add(values);
+                //values.clear();
             }
         } else {
             msg("No Paired Bluetooth Devices Found.");
