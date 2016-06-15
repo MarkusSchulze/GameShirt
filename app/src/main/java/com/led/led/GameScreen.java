@@ -24,6 +24,7 @@ import java.util.TimerTask;
 public class GameScreen extends ActionBarActivity {
     private OutputStream mmOutputStream;
     private BTConnection btConn;
+    private int[] highscore;
     private TextView lumn, inputText1, inputText2;
     private final int zoneCount = 2;
     private final long startTime = System.currentTimeMillis();
@@ -32,32 +33,33 @@ public class GameScreen extends ActionBarActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent newint = getIntent();
-        String address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS);
-        //Versuche die richtige BT-Verbindung in der Arraylist von Playerselection zu finden
-        //DEBUG
+        //String address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS);
+
+        highscore = new int[PlayerSelection.myBlueComms.size()];
         for (int i = 0; i < PlayerSelection.myBlueComms.size(); i++) {
             for (int u = 0; u < zoneCount; u++) {
                 sendWithDelay(String.valueOf(u + 1) + "f", 200 * u);
             }
+            highscore[i]= 0;
 
-            if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())) {
-                btConn = PlayerSelection.myBlueComms.get(i);
-                btConn.beginListenForData();
-                btConn.getInputText();
-                try {
-                    mmOutputStream = btConn.getMmSocket().getOutputStream();
-                } catch (IOException e) {
-                    msg(e.toString());
-                    finish();
-                }
-
-            }
+//            if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())) {
+//                btConn = PlayerSelection.myBlueComms.get(i);
+//                btConn.beginListenForData();
+//                btConn.getInputText();
+//                try {
+//                    mmOutputStream = btConn.getMmSocket().getOutputStream();
+//                } catch (IOException e) {
+//                    msg(e.toString());
+//                    finish();
+//                }
+//
+//            }
         }
 
-        if (btConn == null) {
-            msg("Something went wrong");
-            finish();
-        }
+//        if (btConn == null) {
+//            msg("Something went wrong");
+//            finish();
+//        }
 
         //view of the ledControl
         setContentView(R.layout.activity_game_screen);
@@ -129,21 +131,20 @@ public class GameScreen extends ActionBarActivity {
     }
 
     private void turnOffLed() {
-        try {
-            inputText2.setText(btConn.getInputText());
-            inputText1.setText(PlayerSelection.myBlueComms.get(0).getInputText());
-            mmOutputStream.write("zone1off".getBytes());
-        } catch (IOException e) {
-            msg(e.toString());
-        }
+        inputText1.setText(PlayerSelection.myBlueComms.get(0).getInputText());
+//        try {
+//            mmOutputStream.write("zone1off".getBytes());
+//        } catch (IOException e) {
+//            msg(e.toString());
+//        }
     }
 
     private void turnOnLed() {
-        try {
-            mmOutputStream.write("zone1on".getBytes());
-        } catch (IOException e) {
-            msg(e.toString());
-        }
+//        try {
+//            mmOutputStream.write("zone1on".getBytes());
+//        } catch (IOException e) {
+//            msg(e.toString());
+//        }
         startTimer();
 //        try {
 //            mmOutputStream.write("TO".getBytes());
@@ -167,6 +168,8 @@ public class GameScreen extends ActionBarActivity {
                     selectZoneToHit();
                 }
                 detectHit();
+                inputText1.setText(String.valueOf(highscore[0]));
+                inputText2.setText(PlayerSelection.myBlueComms.get(0).getInputText());
 
                 timerHandler.postDelayed(this, 1000);
             }
@@ -208,32 +211,41 @@ public class GameScreen extends ActionBarActivity {
     }
 
     private void detectHit() {
+        int i = 0;
         for (BTConnection bt : PlayerSelection.myBlueComms) {
 
             //TODO Highscore erhöhen, wenn man einen Treffer gelandet hat
 
+            String debug = bt.getInputText();
+
+            Log.d("msgInput",bt.getInputText()+ "p" + i);
             switch (bt.getInputText()) {
                 case "hit1\r":
                     Log.d("Treffer1", "true");
+                    highscore[i]++;
                     zoneOff(1);
                     bt.resetInputText();
                     break;
                 case "hit2\r":
                     Log.d("Treffer2", "true");
+                    highscore[i]++;
                     zoneOff(2);
                     bt.resetInputText();
                     break;
                 case "hit3\r":
                     Log.d("Treffer3", "true");
+                    highscore[i]++;
                     zoneOff(3);
                     bt.resetInputText();
                     break;
                 case "hit4\r":
                     Log.d("Treffer4", "true");
+                    highscore[i]++;
                     zoneOff(4);
                     bt.resetInputText();
                     break;
             }
+            i++;
         }
     }
 }
