@@ -101,6 +101,10 @@ public class BTConnection {
         }
     }
 
+    public void resetInputText(){
+        inputText = "";
+    }
+
     public void closeBT() throws IOException {
         stopWorker = true;
         mmOutputStream.close();

@@ -13,8 +13,6 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -24,13 +22,10 @@ import java.util.TimerTask;
  * gets the BlueTooth connection from the PlayerSelection. Testclass to get the data transfer going.
  */
 public class GameScreen extends ActionBarActivity {
-    private String[] lastMsg;
-    String myMsg;
     private OutputStream mmOutputStream;
     private BTConnection btConn;
     private TextView lumn, inputText1, inputText2;
     private final int zoneCount = 2;
-    private boolean[] zones = new boolean[zoneCount + 1];
     private final long startTime = System.currentTimeMillis();
     private final Handler timerHandler = new Handler();
 
@@ -38,13 +33,11 @@ public class GameScreen extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         Intent newint = getIntent();
         String address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS);
-        lastMsg = new String[PlayerSelection.myBlueComms.size()];
         //Versuche die richtige BT-Verbindung in der Arraylist von Playerselection zu finden
         //DEBUG
         for (int i = 0; i < PlayerSelection.myBlueComms.size(); i++) {
-            lastMsg[i] = "";
-            for (int u = 0;u<zoneCount;u++){
-                sendWithDelay(String.valueOf(u + 1) + "f", 200*u);
+            for (int u = 0; u < zoneCount; u++) {
+                sendWithDelay(String.valueOf(u + 1) + "f", 200 * u);
             }
 
             if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())) {
@@ -165,8 +158,8 @@ public class GameScreen extends ActionBarActivity {
             @Override
             public void run() {
                 long millis = System.currentTimeMillis() - startTime;
-                int seconds = (int) (millis / 1000);
-                seconds = seconds % 60;
+                //int seconds = (int) (millis / 1000);
+                //seconds = seconds % 60;
 
                 //Log.d("Timer", String.valueOf(seconds));
 
@@ -175,7 +168,7 @@ public class GameScreen extends ActionBarActivity {
                 }
                 detectHit();
 
-                timerHandler.postDelayed(this, 100);
+                timerHandler.postDelayed(this, 1000);
             }
         };
         timerHandler.postDelayed(timerRunnable, 0);
@@ -184,15 +177,13 @@ public class GameScreen extends ActionBarActivity {
     private void selectZoneToHit() {
         Random randomGenerator = new Random();
         int randomInt = randomGenerator.nextInt(zoneCount) + 1;
-        zones[randomInt] = true;
         String msg = String.valueOf(randomInt) + "n";
-        for (int i = 1; i < 2; i++){
-            sendWithDelay(msg,333*i);
+        for (int i = 1; i < 2; i++) {
+            sendWithDelay(msg, 333 * i);
         }
     }
 
-    private void sendWithDelay(final String msg, int delay){
-        //myMsg = msg;
+    private void sendWithDelay(final String msg, int delay) {
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -211,55 +202,38 @@ public class GameScreen extends ActionBarActivity {
 
     private void zoneOff(int zone) {
         String msg = String.valueOf(zone) + "f";
-        zones[zone] = false;
-        for (int i = 1; i < 2; i++){
-            sendWithDelay(msg,200*i);
+        for (int i = 1; i < 2; i++) {
+            sendWithDelay(msg, 200 * i);
         }
     }
 
     private void detectHit() {
-        int i = 0;
         for (BTConnection bt : PlayerSelection.myBlueComms) {
 
             //TODO Highscore erhöhen, wenn man einen Treffer gelandet hat
-            String temp = bt.getInputText();
-            if (temp == null)
-                    temp = "";
-            //Log.d("bla", test.substring(0,4));
-            if (!lastMsg[i].equalsIgnoreCase(bt.getInputText())){
-                switch (bt.getInputText()) {
-                    case "hit1\r":
-                        if (zones[1]) {
-                            Log.d("Treffer1", "true");
-                            zoneOff(1);
-                            lastMsg[i] = "";
-                        }
-                        break;
-                    case "hit2\r":
-                        if (zones[2]) {
-                            Log.d("Treffer2", "true");
-                            zoneOff(2);
-                            lastMsg[i] = "";
-                        }
-                        break;
-                    case "hit3\r":
-                        if (zones[3]) {
-                            Log.d("Treffer3", "true");
-                            zoneOff(3);
-                            lastMsg[i] = "";
-                        }
-                        break;
-                    case "hit4\r":
-                        if (zones[4]) {
-                            Log.d("Treffer4", "true");
-                            zoneOff(4);
-                            lastMsg[i] = "";
-                        }
-                        break;
-                }
-                lastMsg[i] = bt.getInputText();
+
+            switch (bt.getInputText()) {
+                case "hit1\r":
+                    Log.d("Treffer1", "true");
+                    zoneOff(1);
+                    bt.resetInputText();
+                    break;
+                case "hit2\r":
+                    Log.d("Treffer2", "true");
+                    zoneOff(2);
+                    bt.resetInputText();
+                    break;
+                case "hit3\r":
+                    Log.d("Treffer3", "true");
+                    zoneOff(3);
+                    bt.resetInputText();
+                    break;
+                case "hit4\r":
+                    Log.d("Treffer4", "true");
+                    zoneOff(4);
+                    bt.resetInputText();
+                    break;
             }
-            i++;
         }
     }
 }

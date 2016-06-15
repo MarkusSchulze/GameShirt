@@ -16,15 +16,11 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 
 public class PlayerSelection extends Activity {
-    public static String EXTRA_ADDRESS = "device_address";
-    //widgets
-    private Button btnPaired;
+    public final static String EXTRA_ADDRESS = "device_address";
     private ListView deviceList;
     //Bluetooth
     private BluetoothDevice bt;
@@ -39,7 +35,7 @@ public class PlayerSelection extends Activity {
         setContentView(R.layout.activity_player_selection);
 
         //Calling widgets
-        btnPaired = (Button) findViewById(R.id.button);
+        Button btnPaired = (Button) findViewById(R.id.button);
         deviceList = (ListView) findViewById(R.id.listView);
 
         //if the device has bluetooth
@@ -130,7 +126,7 @@ public class PlayerSelection extends Activity {
         deviceList.setOnItemClickListener(myListClickListener); //Method called when the device from the list is clicked
     }
 
-    private AdapterView.OnItemClickListener myListClickListener = new AdapterView.OnItemClickListener() {
+    private final AdapterView.OnItemClickListener myListClickListener = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> rowList, View v, int position, long arg3) {
             ArrayList<Object> values = (ArrayList<Object>) rowList.getItemAtPosition(position);
             //String name = (String) values.get(0);
