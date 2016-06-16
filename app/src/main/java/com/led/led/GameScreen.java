@@ -247,10 +247,18 @@ public class GameScreen extends ActionBarActivity {
     private void playSound(int soundCode){
         if(soundCode == HIT_SOUND_NORMAL){
             MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.hit);
+            int maxVolume = 100;
+            int currVolume = 100; //the volume we actually want
+            float log1 = (float)(Math.log(maxVolume-currVolume)/Math.log(maxVolume));
+            mediaPlayer.setVolume(1.0f-log1, 1.0f-log1);
             mediaPlayer.start();
         }
         if(soundCode == HIT_SOUND_LIGHTSABER){
             MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.lightsaberhit);
+            int maxVolume = 100;
+            int currVolume = 100; //the volume we actually want
+            float log1 = (float)(Math.log(maxVolume-currVolume)/Math.log(maxVolume));
+            mediaPlayer.setVolume(1.0f-log1, 1.0f-log1);
             mediaPlayer.start();
         }
     }
