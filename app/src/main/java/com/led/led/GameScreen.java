@@ -1,6 +1,7 @@
 package com.led.led;
 
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
@@ -28,6 +29,8 @@ public class GameScreen extends ActionBarActivity {
     private final int zoneCount = 2;
     private final long startTime = System.currentTimeMillis();
     private final Handler timerHandler = new Handler();
+    private int HIT_SOUND_NORMAL = 0;
+    private int HIT_SOUND_LIGHTSABER = 1;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -217,23 +220,38 @@ public class GameScreen extends ActionBarActivity {
                     Log.d("Treffer1", "true");
                     zoneOff(1);
                     bt.resetInputText();
+                    playSound(HIT_SOUND_NORMAL);
                     break;
                 case "hit2\r":
                     Log.d("Treffer2", "true");
                     zoneOff(2);
                     bt.resetInputText();
+                    playSound(HIT_SOUND_LIGHTSABER);
                     break;
                 case "hit3\r":
                     Log.d("Treffer3", "true");
                     zoneOff(3);
                     bt.resetInputText();
+                    playSound(HIT_SOUND_NORMAL);
                     break;
                 case "hit4\r":
                     Log.d("Treffer4", "true");
                     zoneOff(4);
                     bt.resetInputText();
+                    playSound(HIT_SOUND_NORMAL);
                     break;
             }
+        }
+    }
+
+    private void playSound(int soundCode){
+        if(soundCode == HIT_SOUND_NORMAL){
+            MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.hit);
+            mediaPlayer.start();
+        }
+        if(soundCode == HIT_SOUND_LIGHTSABER){
+            MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.lightsaberhit);
+            mediaPlayer.start();
         }
     }
 }
