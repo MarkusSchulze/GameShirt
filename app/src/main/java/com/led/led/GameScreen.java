@@ -31,6 +31,7 @@ public class GameScreen extends ActionBarActivity {
     private final Handler timerHandler = new Handler();
     private int HIT_SOUND_NORMAL = 0;
     private int HIT_SOUND_LIGHTSABER = 1;
+    private int HIT_SOUND_NORMAL_2 = 2;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -226,7 +227,7 @@ public class GameScreen extends ActionBarActivity {
                     Log.d("Treffer2", "true");
                     zoneOff(2);
                     bt.resetInputText();
-                    playSound(HIT_SOUND_LIGHTSABER);
+                    playSound(HIT_SOUND_NORMAL_2);
                     break;
                 case "hit3\r":
                     Log.d("Treffer3", "true");
@@ -255,6 +256,14 @@ public class GameScreen extends ActionBarActivity {
         }
         if(soundCode == HIT_SOUND_LIGHTSABER){
             MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.lightsaberhit);
+            int maxVolume = 100;
+            int currVolume = 100; //the volume we actually want
+            float log1 = (float)(Math.log(maxVolume-currVolume)/Math.log(maxVolume));
+            mediaPlayer.setVolume(1.0f-log1, 1.0f-log1);
+            mediaPlayer.start();
+        }
+        if(soundCode == HIT_SOUND_NORMAL_2){
+            MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.hit_2);
             int maxVolume = 100;
             int currVolume = 100; //the volume we actually want
             float log1 = (float)(Math.log(maxVolume-currVolume)/Math.log(maxVolume));
