@@ -25,6 +25,7 @@ import java.util.TimerTask;
 public class GameScreen extends ActionBarActivity {
     private OutputStream mmOutputStream;
     private BTConnection btConn;
+    private int[] highscore;
     private TextView lumn, inputText1, inputText2;
     private final int zoneCount = 2;
     private final long startTime = System.currentTimeMillis();
@@ -37,12 +38,13 @@ public class GameScreen extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         Intent newint = getIntent();
         String address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS);
-        //Versuche die richtige BT-Verbindung in der Arraylist von Playerselection zu finden
-        //DEBUG
+
+        highscore = new int[PlayerSelection.myBlueComms.size()];
         for (int i = 0; i < PlayerSelection.myBlueComms.size(); i++) {
             for (int u = 0; u < zoneCount; u++) {
                 sendWithDelay(String.valueOf(u + 1) + "f", 200 * u);
             }
+            highscore[i]= 0;
 
             if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())) {
                 btConn = PlayerSelection.myBlueComms.get(i);
@@ -171,6 +173,8 @@ public class GameScreen extends ActionBarActivity {
                     selectZoneToHit();
                 }
                 detectHit();
+                inputText1.setText(String.valueOf(highscore[0]));
+                //inputText2.setText(PlayerSelection.myBlueComms.get(0).getInputText());
 
                 timerHandler.postDelayed(this, 1000);
             }
@@ -180,8 +184,10 @@ public class GameScreen extends ActionBarActivity {
 
     private void selectZoneToHit() {
         Random randomGenerator = new Random();
-        int randomInt = randomGenerator.nextInt(zoneCount) + 1;
-        String msg = String.valueOf(randomInt) + "n";
+        //Zahl >0 und <zoneCount
+        int randomInt = randomGenerator.nextInt (zoneCount);
+        String msg = String.valueOf(randomInt);
+        msg += msg+msg+msg;
         for (int i = 1; i < 2; i++) {
             sendWithDelay(msg, 333 * i);
         }
@@ -205,44 +211,44 @@ public class GameScreen extends ActionBarActivity {
     }
 
     private void zoneOff(int zone) {
-        String msg = String.valueOf(zone) + "f";
+        String msg = String.valueOf(zone);
+        msg += msg+msg+msg;
         for (int i = 1; i < 2; i++) {
             sendWithDelay(msg, 200 * i);
         }
     }
 
     private void detectHit() {
+        int i = 0;
         for (BTConnection bt : PlayerSelection.myBlueComms) {
 
             //TODO Highscore erhöhen, wenn man einen Treffer gelandet hat
+            String test;
+            test = bt.getInputText();
 
             switch (bt.getInputText()) {
                 case "hit1\r":
-                    Log.d("Treffer1", "true");
-                    zoneOff(1);
-                    bt.resetInputText();
-                    playSound(HIT_SOUND_NORMAL);
+                    gotHit(i,5);
                     break;
                 case "hit2\r":
-                    Log.d("Treffer2", "true");
-                    zoneOff(2);
-                    bt.resetInputText();
-                    playSound(HIT_SOUND_NORMAL_2);
+                    gotHit(i,6);
                     break;
                 case "hit3\r":
-                    Log.d("Treffer3", "true");
-                    zoneOff(3);
-                    bt.resetInputText();
-                    playSound(HIT_SOUND_NORMAL);
+                    gotHit(i,7);
                     break;
                 case "hit4\r":
-                    Log.d("Treffer4", "true");
-                    zoneOff(4);
-                    bt.resetInputText();
-                    playSound(HIT_SOUND_NORMAL);
+                    gotHit(i,8);
                     break;
             }
         }
+    }
+
+    private void gotHit(int PlayerID, int zoneID){
+        Log.d("Treffer1", String.valueOf(highscore[PlayerID]));
+        highscore[PlayerID]++;
+        zoneOff(zoneID);
+        PlayerSelection.myBlueComms.get(PlayerID).resetInputText();
+        playSound(HIT_SOUND_NORMAL_2);
     }
 
     private void playSound(int soundCode){
