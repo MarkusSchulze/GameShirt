@@ -8,13 +8,14 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Observable;
 import java.util.UUID;
 
 /**
  * Created by Maggi on 03.06.2016.
  * Does all the Connection work with Bluetooth and creats a Thread that handles the Inputstream
  */
-public class BTConnection {
+public class BTConnection extends Observable{
     private BluetoothDevice btDevice;
     private BluetoothSocket mmSocket;
     private OutputStream mmOutputStream;
@@ -67,6 +68,10 @@ public class BTConnection {
 
                                     handler.post(new Runnable() {
                                         public void run() {
+                                            if (!data.isEmpty()){
+                                                setChanged();
+                                            }
+                                            notifyObservers(data);
                                             inputText = data;
                                         }
                                     });

@@ -14,6 +14,8 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,7 +24,7 @@ import java.util.TimerTask;
  * Created by Maggi on 01.06.2016.
  * gets the BlueTooth connection from the PlayerSelection. Testclass to get the data transfer going.
  */
-public class GameScreen extends ActionBarActivity {
+public class GameScreen extends ActionBarActivity implements Observer {
     private OutputStream mmOutputStream;
     private BTConnection btConn;
     private int[] highscore;
@@ -44,7 +46,7 @@ public class GameScreen extends ActionBarActivity {
             for (int u = 0; u < zoneCount; u++) {
                 sendWithDelay(String.valueOf(u + 1) + "f", 200 * u);
             }
-            highscore[i]= 0;
+            highscore[i] = 0;
 
             if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())) {
                 btConn = PlayerSelection.myBlueComms.get(i);
@@ -185,9 +187,9 @@ public class GameScreen extends ActionBarActivity {
     private void selectZoneToHit() {
         Random randomGenerator = new Random();
         //Zahl >0 und <zoneCount
-        int randomInt = randomGenerator.nextInt (zoneCount);
+        int randomInt = randomGenerator.nextInt(zoneCount);
         String msg = String.valueOf(randomInt);
-        msg += msg+msg+msg;
+        msg += msg + msg + msg;
         for (int i = 1; i < 2; i++) {
             sendWithDelay(msg, 333 * i);
         }
@@ -212,7 +214,7 @@ public class GameScreen extends ActionBarActivity {
 
     private void zoneOff(int zone) {
         String msg = String.valueOf(zone);
-        msg += msg+msg+msg;
+        msg += msg + msg + msg;
         for (int i = 1; i < 2; i++) {
             sendWithDelay(msg, 200 * i);
         }
@@ -221,60 +223,68 @@ public class GameScreen extends ActionBarActivity {
     private void detectHit() {
         int i = 0;
         for (BTConnection bt : PlayerSelection.myBlueComms) {
-
-            //TODO Highscore erhöhen, wenn man einen Treffer gelandet hat
-            String test;
-            test = bt.getInputText();
-
-            switch (bt.getInputText()) {
+            String inputText = bt.getInputText();
+            switch (inputText) {
                 case "hit1\r":
-                    gotHit(i,5);
+                    gotHit(i, 5);
                     break;
                 case "hit2\r":
-                    gotHit(i,6);
+                    gotHit(i, 6);
                     break;
                 case "hit3\r":
-                    gotHit(i,7);
+                    gotHit(i, 7);
                     break;
                 case "hit4\r":
-                    gotHit(i,8);
+                    gotHit(i, 8);
                     break;
             }
         }
     }
 
-    private void gotHit(int PlayerID, int zoneID){
-        Log.d("Treffer1", String.valueOf(highscore[PlayerID]));
+    private void gotHit(int PlayerID, int zoneID) {
+        Log.d("Treffer" + zoneID, "Score" + String.valueOf(highscore[PlayerID]));
         highscore[PlayerID]++;
         zoneOff(zoneID);
         PlayerSelection.myBlueComms.get(PlayerID).resetInputText();
         playSound(HIT_SOUND_NORMAL_2);
     }
 
-    private void playSound(int soundCode){
-        if(soundCode == HIT_SOUND_NORMAL){
+    private void playSound(int soundCode) {
+        if (soundCode == HIT_SOUND_NORMAL) {
             MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.hit);
             int maxVolume = 100;
             int currVolume = 100; //the volume we actually want
-            float log1 = (float)(Math.log(maxVolume-currVolume)/Math.log(maxVolume));
-            mediaPlayer.setVolume(1.0f-log1, 1.0f-log1);
+            float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
+            mediaPlayer.setVolume(1.0f - log1, 1.0f - log1);
             mediaPlayer.start();
         }
-        if(soundCode == HIT_SOUND_LIGHTSABER){
+        if (soundCode == HIT_SOUND_LIGHTSABER) {
             MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.lightsaberhit);
             int maxVolume = 100;
             int currVolume = 100; //the volume we actually want
-            float log1 = (float)(Math.log(maxVolume-currVolume)/Math.log(maxVolume));
-            mediaPlayer.setVolume(1.0f-log1, 1.0f-log1);
+            float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
+            mediaPlayer.setVolume(1.0f - log1, 1.0f - log1);
             mediaPlayer.start();
         }
-        if(soundCode == HIT_SOUND_NORMAL_2){
+        if (soundCode == HIT_SOUND_NORMAL_2) {
             MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.hit_2);
             int maxVolume = 100;
             int currVolume = 100; //the volume we actually want
-            float log1 = (float)(Math.log(maxVolume-currVolume)/Math.log(maxVolume));
-            mediaPlayer.setVolume(1.0f-log1, 1.0f-log1);
+            float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
+            mediaPlayer.setVolume(1.0f - log1, 1.0f - log1);
             mediaPlayer.start();
         }
+    }
+
+    @Override
+    public void update(Observable observable, Object o) {
+        int i = 0;
+        for(BTConnection bt : PlayerSelection.myBlueComms){
+            if (bt.equals(observable)){
+                Log.d("ObserverOf" , "Player" + i);
+            }
+            i++;
+        }
+        inputText2.setText((String) o);
     }
 }

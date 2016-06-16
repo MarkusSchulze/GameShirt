@@ -22,6 +22,7 @@
         </activity>
         <activity
             android:name=".GameScreen"
+            android:screenOrientation="landscape"
             android:label="@string/BT_Action" >
         </activity>
         <activity
