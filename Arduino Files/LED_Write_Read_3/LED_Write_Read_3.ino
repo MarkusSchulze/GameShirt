@@ -95,10 +95,10 @@ void setup()
 }
 
 void loop(){
-    if(led1on > 0){
+    if(led1on > 0 or true){
       capacitive();
     }
-    if(led2on > 0){
+    if(led2on > 0 or true){
       capacitive2();
     }
     
@@ -145,7 +145,7 @@ void loop(){
     }
     */
 
-    //zone control from app
+    /*zone control from app
     int z1on_matches = 0;
     int z1off_matches = 0;
     int z2on_matches = 0;
@@ -166,18 +166,20 @@ void loop(){
         }
       }
     }
-    if(z1on_matches >= 3){
+    */
+    if(string == "0000"){
         led1On();
     }
-    if(z2on_matches >= 3){
+    if(string == "1111"){
         led2On();
     }
-    if(z1off_matches >= 3){
+    if(string == "5555"){
         led1Off_countdown();
     }
-    if(z2off_matches >= 3){
+    if(string == "6666"){
         led2Off_countdown();
     }
+    
     //mySerial.println("hello");
     //Serial.print("loop");
     
