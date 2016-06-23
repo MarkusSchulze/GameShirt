@@ -249,7 +249,7 @@ void led1On(){
 }
 
 void led1OnWeak(){
-    analogWrite(led1, 100);
+    analogWrite(led1, 200);
     led1_timer = led_phase_time;
 }
 
@@ -266,7 +266,7 @@ void led2On(){
 }
 
 void led2OnWeak(){
-    analogWrite(led2, 100);
+    analogWrite(led2, 200);
     led2_timer = led_phase_time;
 }
 
