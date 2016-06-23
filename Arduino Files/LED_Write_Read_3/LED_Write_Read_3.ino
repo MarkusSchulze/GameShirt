@@ -23,19 +23,19 @@ SoftwareSerial mySerial(6,5);
 
 //Globale Einstellungen
 int cycle_delay = 100; //delay pro schleifen durchlauf, in milli secs
-int led_shutdown_blink_time = 1000; // how long should a LED blink after receiving shutdown message, in milli secs
-int hitcooldown_length = 2000; //how long hits wont be detected after a hit, in milli secs
+int led_phase_time = 1250; // how long each LED phase lasts
+int hitcooldown_length = 0; //how long hits wont be detected after a hit, in milli secs
 int calibrate = 3; //how often should we measure the mean value
 
 
 //LED 1 States
-int led1on = 0; //2 = on, 1 = blinking, 0 = off
-int led1_blink_timer = 0;
+int led1on = 0; //3 = on bright, 2 = on weak, 1 = blinking, 0 = off
+int led1_timer = 0;
 boolean led1_blink_state = false;
 
 //LED 2 States
-int led2on = 0; //2 = on, 1 = blinking, 0 = off
-int led2_blink_timer = 0;
+int led2on = 0; //3 = on bright, 2 = on weak, 1 = blinking, 0 = off
+int led2_timer = 0;
 boolean led2_blink_state = false;
 
 //Schwellenwerte fuer Hit Detection
@@ -48,7 +48,7 @@ long trigger2;
 void setup()
 {
     Serial.begin(115200); //faster when off?
-    mySerial.begin(9600);
+    mySerial.begin(115200);
     //  myCapacitiveSerial.begin(115200);
     pinMode(led1, OUTPUT);
     pinMode(led2,OUTPUT);
@@ -95,6 +95,7 @@ void setup()
 }
 
 void loop(){
+    string = "";
     if(led1on > 0 or true){
       capacitive();
     }
@@ -108,14 +109,6 @@ void loop(){
     //small deactivation of zone after hitting it, to prevent one hit counting twice
     if(hitcooldown > 0) hitcooldown = hitcooldown - cycle_delay;
     
-    // myCapacitiveSerial.listen();
-    //  while(myCapacitiveSerial.available() > 0){}
-    //mySerial.listen();
-
-    //if (mySerial.available() > 0 or true) {
-        string = "";
-    //}
-
     while(mySerial.available() > 0)
     {
         command = ((char)mySerial.read());
@@ -129,23 +122,7 @@ void loop(){
         delay(1);
     }
 
-    //debug LED tests
-    /*
-    if(string =="TO"){
-        led1On();
-        led2On();
-        led1on = true;
-    }
-
-    if(string =="TF"){
-        led1Off();
-        led2Off();
-        led1on = false;
-        //  mySerial.println(string);
-    }
-    */
-
-    /*zone control from app
+    //zone control from app
     int z1on_matches = 0;
     int z1off_matches = 0;
     int z2on_matches = 0;
@@ -166,7 +143,26 @@ void loop(){
         }
       }
     }
+    if(z1on_matches >= 2){
+        Serial.println("phase zone 1: 3");
+        led1On();
+    }
+    if(z2on_matches >= 2){
+        Serial.println("phase zone 2: 3");
+        led2On();
+    }
+    /* cant occur anymore
+    if(z1off_matches >= 2){
+        Serial.print("1 off");
+        led1Off_countdown();
+    }
+    if(z2off_matches >= 2){
+        Serial.print("2 off");
+        led2Off_countdown();
+    }
     */
+    
+    /*
     if(string == "0000"){
         led1On();
     }
@@ -179,13 +175,23 @@ void loop(){
     if(string == "6666"){
         led2Off_countdown();
     }
-    
+    */
     //mySerial.println("hello");
-    //Serial.print("loop");
+    Serial.print(string);
     
-    //make LEDs blink for 1 sec once they are shut down by app
-    if (led1_blink_timer > 0){
-      led1_blink_timer = led1_blink_timer - cycle_delay;
+    //start new phase when a phase ends: 3 -> 2 -> 1 -> 0
+    //LED 1
+    if (led1on > 0){
+      led1_timer = led1_timer - cycle_delay;
+      if(led1_timer <= 0){
+        led1on = led1on - 1; //change phase
+        led1_timer = led_phase_time;
+        Serial.print("phase zone 1: ");
+        Serial.println(led1on);
+        if(led1on == 2){
+          led1OnWeak();
+        }
+      }
       if(led1on == 1){
         if(led1_blink_state){
           led1_blink_state = false;
@@ -194,13 +200,22 @@ void loop(){
           led1_blink_state = true;
           analogWrite(led1, 255);
         }
-        if(led1_blink_timer <= 0){
-          led1Off();
+      }
+    }else{
+      led1Off();
+    }
+    //LED 2
+    if (led2on > 0){
+      led2_timer = led2_timer - cycle_delay;
+      if(led2_timer <= 0){
+        led2on = led2on - 1; //change phase
+        led2_timer = led_phase_time;
+        Serial.print("phase zone 2: ");
+        Serial.println(led2on);
+        if(led2on == 2){
+          led2OnWeak();
         }
       }
-    }
-    if (led2_blink_timer > 0){
-      led2_blink_timer = led2_blink_timer - cycle_delay;
       if(led2on == 1){
         if(led2_blink_state){
           led2_blink_state = false;
@@ -209,10 +224,9 @@ void loop(){
           led2_blink_state = true;
           analogWrite(led2, 255);
         }
-        if(led2_blink_timer <= 0){
-          led2Off();
-        }
       }
+    }else{
+      led2Off();
     }
 
     //bluetooth debug message
@@ -230,44 +244,36 @@ void loop(){
 
 void led1On(){
     analogWrite(led1, 255);
-    delay(10);
-    //Serial.println("zone 1 on");
-    led1on = 2;
+    led1on = 3;
+    led1_timer = led_phase_time;
+}
+
+void led1OnWeak(){
+    analogWrite(led1, 100);
+    led1_timer = led_phase_time;
 }
 
 void led1Off(){
     analogWrite(led1, 0);
-    delay(10);
-    //Serial.println("zone 1 off");
+    led1_timer = 0;
     led1on = 0;
-}
-
-void led1Off_countdown(){
-  if(led1_blink_timer <= 0){
-    led1on = 1;
-    led1_blink_timer = led_shutdown_blink_time;
-  }
 }
 
 void led2On(){
     analogWrite(led2, 255);
-    delay(10);
-    //Serial.println("zone 2 on");
-    led2on = 2;
+    led2on = 3;
+    led2_timer = led_phase_time;
+}
+
+void led2OnWeak(){
+    analogWrite(led2, 100);
+    led2_timer = led_phase_time;
 }
 
 void led2Off(){
     analogWrite(led2, 0);
-    delay(10);
-    //Serial.println("zone 2 not off");
+    led2_timer = 0;
     led2on = 0;
-}
-
-void led2Off_countdown(){
-    if(led2_blink_timer <= 0){
-      led2on = 1;
-      led2_blink_timer = led_shutdown_blink_time;
-    }
 }
 
 void capacitive(){
@@ -278,16 +284,26 @@ void capacitive(){
 
     if(true){
       //Serial.print(millis() - start);        // check on performance in milliseconds
-      Serial.print("\t trigger: ");                    // tab character for debug window spacing
-      Serial.print(trigger);   
-      Serial.print("\t gemessen: ");
-      Serial.println(total1);                  // print sensor output 1
+      //Serial.print("\t trigger: ");                    // tab character for debug window spacing
+      //Serial.print(trigger);   
+      //Serial.print("\t gemessen: ");
+      //Serial.println(total1);                  // print sensor output 1
     }
     
     if(total1 > trigger && led1on > 0 && hitcooldown <= 0){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
       Serial.println("hit1");
-      mySerial.println("hit1");
+      if(led1on == 3){
+        mySerial.println("h3");
+      }
+      if(led1on == 2){
+        mySerial.println("h2");
+      }
+      if(led1on == 1){
+        mySerial.println("h1");
+      }
+      
       hitcooldown = hitcooldown_length;
+      led1Off();
     }else{
       //mySerial.println("no hit");
     }
@@ -307,10 +323,10 @@ void capacitive2(){
 
     if(true){
       //Serial.print(millis() - start);        // check on performance in milliseconds
-      Serial.print("\t trigger2: ");                    // tab character for debug window spacing
-      Serial.print(trigger2);   
-      Serial.print("\t gemessen: ");
-      Serial.println(total1);                  // print sensor output 1
+      //Serial.print("\t trigger2: ");                    // tab character for debug window spacing
+      //Serial.print(trigger2);   
+      //Serial.print("\t gemessen: ");
+      //Serial.println(total1);                  // print sensor output 1
     }
     //Serial.print("hitcooldown ");
     //Serial.print(hitcooldown);
@@ -318,9 +334,17 @@ void capacitive2(){
     //Serial.print(led2on);
     if(total1 > trigger2  && led2on > 0 && hitcooldown <= 0){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
       Serial.println("hit2");
-      mySerial.println("hit2");
+      if(led1on == 3){
+        mySerial.println("h3");
+      }
+      if(led1on == 2){
+        mySerial.println("h2");
+      }
+      if(led1on == 1){
+        mySerial.println("h1");
+      }
       hitcooldown = hitcooldown_length;
-      
+      led2Off();
     }else{
       //mySerial.println("no hit2");
     }
