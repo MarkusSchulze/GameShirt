@@ -9,8 +9,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.led.led.archive.HitListener;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -24,11 +27,13 @@ import java.util.TimerTask;
  * Created by Maggi on 01.06.2016.
  * gets the BlueTooth connection from the PlayerSelection. Testclass to get the data transfer going.
  */
-public class GameScreen extends ActionBarActivity implements Observer {
+public class GameScreen extends ActionBarActivity {
     private OutputStream mmOutputStream;
     private BTConnection btConn;
-    private int[] highscore;
-    private TextView lumn, inputText1, inputText2;
+    private static int[] highscore;
+    private static TextView[] container;
+    private TextView l_Player1, l_Player2;
+    private static TextView l_Score1, l_Score2, debugView;
     private final int zoneCount = 2;
     private final long startTime = System.currentTimeMillis();
     private final Handler timerHandler = new Handler();
@@ -42,23 +47,20 @@ public class GameScreen extends ActionBarActivity implements Observer {
         String address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS);
 
         highscore = new int[PlayerSelection.myBlueComms.size()];
+        container = new TextView[2];
         for (int i = 0; i < PlayerSelection.myBlueComms.size(); i++) {
             for (int u = 0; u < zoneCount; u++) {
-                sendWithDelay(String.valueOf(u + 1) + "f", 200 * u);
+                String msg = String.valueOf(u);
+                msg += msg + msg + msg;
+                sendWithDelay(msg, 200 * u);
             }
             highscore[i] = 0;
 
             if (address.equalsIgnoreCase(PlayerSelection.myBlueComms.get(i).getAddress())) {
+                Observer obs = new HitListener();
                 btConn = PlayerSelection.myBlueComms.get(i);
+                btConn.addObserver(obs);
                 btConn.beginListenForData();
-                btConn.getInputText();
-                try {
-                    mmOutputStream = btConn.getMmSocket().getOutputStream();
-                } catch (IOException e) {
-                    msg(e.toString());
-                    finish();
-                }
-
             }
         }
 
@@ -71,94 +73,43 @@ public class GameScreen extends ActionBarActivity implements Observer {
         setContentView(R.layout.activity_game_screen);
 
         //call the widgtes
-        Button btnOn = (Button) findViewById(R.id.button2);
-        Button btnOff = (Button) findViewById(R.id.button3);
-        Button btnDis = (Button) findViewById(R.id.button4);
-        inputText1 = (TextView) findViewById(R.id.textView4);
-        inputText2 = (TextView) findViewById(R.id.textView5);
-        SeekBar brightness = (SeekBar) findViewById(R.id.seekBar);
-        lumn = (TextView) findViewById(R.id.lumn);
+        l_Player1 = (TextView) findViewById(R.id.player1);
+        l_Player2 = (TextView) findViewById(R.id.player2);
+        l_Score1 = (TextView) findViewById(R.id.scorePlayer1);
+        l_Score2 = (TextView) findViewById(R.id.scorePlayer2);
+        debugView = (TextView) findViewById(R.id.debug);
+        Switch switch_On = (Switch) findViewById(R.id.switch1);
+
+        l_Player1.setText("Casper");
+        l_Player2.setText("Markus");
+        container[0]=l_Score1;
+        container[1]=l_Score2;
+        l_Score1.setText("0");
+        l_Score2.setText("0");
+
+        //SeekBar brightness = (SeekBar) findViewById(R.id.seekBar);
+        //lumn = (TextView) findViewById(R.id.lumn);
 
 
         //commands to be sent to bluetooth
-        btnOn.setOnClickListener(new View.OnClickListener() {
+        switch_On.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                turnOnLed();      //method to turn on
+                startTimer();      //method to turn on
             }
         });
 
-        btnOff.setOnClickListener(new View.OnClickListener() {
-            @Override
+        l_Player1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                turnOffLed();   //method to turn off
-            }
-        });
-
-        btnDis.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-//                try {
-//                    btConn.closeBT(); //close connection
-//                } catch (IOException e) {
-//                    msg("Error");
-//                }
                 finish();
             }
         });
 
-        brightness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    lumn.setText(String.valueOf(progress));
-                    try {
-                        mmOutputStream.write(String.valueOf(progress).getBytes());
-                    } catch (IOException e) {
-                        msg(e.toString());
-                    }
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
     }
 
     // fast way to call Toast
     private void msg(String s) {
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
-    }
-
-    private void turnOffLed() {
-        try {
-            inputText2.setText(btConn.getInputText());
-            inputText1.setText(PlayerSelection.myBlueComms.get(0).getInputText());
-            mmOutputStream.write("zone1off".getBytes());
-        } catch (IOException e) {
-            msg(e.toString());
-        }
-    }
-
-    private void turnOnLed() {
-        try {
-            mmOutputStream.write("zone1on".getBytes());
-        } catch (IOException e) {
-            msg(e.toString());
-        }
-        startTimer();
-//        try {
-//            mmOutputStream.write("TO".getBytes());
-//            inputText2.setText(btConn.getInputText());
-//        } catch (IOException e) {
-//            msg(e.toString());
-//        }
     }
 
     private void startTimer() {
@@ -171,11 +122,11 @@ public class GameScreen extends ActionBarActivity implements Observer {
 
                 //Log.d("Timer", String.valueOf(seconds));
 
-                if (millis % 10 == 0) {
+                if (millis % 6 == 0) {
                     selectZoneToHit();
                 }
-                detectHit();
-                inputText1.setText(String.valueOf(highscore[0]));
+                //detectHit();
+                //l_Score1.setText(String.valueOf(highscore[0]));
                 //inputText2.setText(PlayerSelection.myBlueComms.get(0).getInputText());
 
                 timerHandler.postDelayed(this, 1000);
@@ -276,15 +227,27 @@ public class GameScreen extends ActionBarActivity implements Observer {
         }
     }
 
-    @Override
-    public void update(Observable observable, Object o) {
+    public static void setScore(Observable o, String msg) {
         int i = 0;
-        for(BTConnection bt : PlayerSelection.myBlueComms){
-            if (bt.equals(observable)){
-                Log.d("ObserverOf" , "Player" + i);
+        for (BTConnection bt : PlayerSelection.myBlueComms) {
+            if (bt.equals(o)) {
+                Log.d("ObserverOf", "Player" + i);
+
+                switch (msg) {
+                    case "h1\r":
+                        highscore[i] += 1;
+                        break;
+                    case "h2\r":
+                        highscore[i] += 2;
+                        break;
+                    case "h3\r":
+                        highscore[i] += 3;
+                        break;
+                }
+                container[i].setText(String.valueOf(highscore[i]));
             }
             i++;
         }
-        inputText2.setText((String) o);
+        debugView.setText(msg);
     }
 }

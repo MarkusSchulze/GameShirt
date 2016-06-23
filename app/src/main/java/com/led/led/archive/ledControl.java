@@ -56,7 +56,7 @@ public class ledControl extends ActionBarActivity {
         address = newint.getStringExtra(PlayerSelection.EXTRA_ADDRESS); //receive the address of the bluetooth device
 
         //view of the ledControl
-        setContentView(R.layout.activity_game_screen);
+        setContentView(R.layout.activity_old_screen);
 
         //call the widgtes
         btnOn = (Button) findViewById(R.id.button2);
