@@ -7,8 +7,6 @@ import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,7 +14,6 @@ import android.widget.Toast;
 import com.led.led.archive.HitListener;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Random;
@@ -28,18 +25,20 @@ import java.util.TimerTask;
  * gets the BlueTooth connection from the PlayerSelection. Testclass to get the data transfer going.
  */
 public class GameScreen extends ActionBarActivity {
-    private OutputStream mmOutputStream;
     private BTConnection btConn;
     private static int[] highscore;
     private static TextView[] container;
     private TextView l_Player1, l_Player2;
-    private static TextView l_Score1, l_Score2, debugView;
+    private static TextView debugView;
     private final int zoneCount = 2;
     private final long startTime = System.currentTimeMillis();
     private final Handler timerHandler = new Handler();
-    private int HIT_SOUND_NORMAL = 0;
-    private int HIT_SOUND_LIGHTSABER = 1;
-    private int HIT_SOUND_NORMAL_2 = 2;
+    private static MediaPlayer sound1;
+    private static MediaPlayer sound2;
+    private static MediaPlayer sound3;
+    private static MediaPlayer soundfail1;
+    private static MediaPlayer soundfail2;
+    private static MediaPlayer soundfail3;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,21 +68,37 @@ public class GameScreen extends ActionBarActivity {
             finish();
         }
 
+        sound1 = MediaPlayer.create(getApplicationContext(), R.raw.hit);
+        sound2 = MediaPlayer.create(getApplicationContext(), R.raw.hit_2);
+        sound3 = MediaPlayer.create(getApplicationContext(), R.raw.lightsaberhit);
+        soundfail1 = MediaPlayer.create(getApplicationContext(), R.raw.fail1);
+        soundfail2 = MediaPlayer.create(getApplicationContext(), R.raw.fail2);
+        soundfail3 = MediaPlayer.create(getApplicationContext(), R.raw.fail3);
+        int maxVolume = 100;
+        int currVolume = 100; //the volume we actually want
+        float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
+        sound1.setVolume(1.0f - log1, 1.0f - log1);
+        sound2.setVolume(1.0f - log1, 1.0f - log1);
+        sound3.setVolume(1.0f - log1, 1.0f - log1);
+        soundfail1.setVolume(1.0f - log1, 1.0f - log1);
+        soundfail2.setVolume(1.0f - log1, 1.0f - log1);
+        soundfail3.setVolume(1.0f - log1, 1.0f - log1);
+
         //view of the ledControl
         setContentView(R.layout.activity_game_screen);
 
         //call the widgtes
         l_Player1 = (TextView) findViewById(R.id.player1);
         l_Player2 = (TextView) findViewById(R.id.player2);
-        l_Score1 = (TextView) findViewById(R.id.scorePlayer1);
-        l_Score2 = (TextView) findViewById(R.id.scorePlayer2);
+        TextView l_Score1 = (TextView) findViewById(R.id.scorePlayer1);
+        TextView l_Score2 = (TextView) findViewById(R.id.scorePlayer2);
         debugView = (TextView) findViewById(R.id.debug);
         Switch switch_On = (Switch) findViewById(R.id.switch1);
 
         l_Player1.setText("Casper");
         l_Player2.setText("Markus");
-        container[0]=l_Score1;
-        container[1]=l_Score2;
+        container[0]= l_Score1;
+        container[1]= l_Score2;
         l_Score1.setText("0");
         l_Score2.setText("0");
 
@@ -137,8 +152,12 @@ public class GameScreen extends ActionBarActivity {
 
     private void selectZoneToHit() {
         Random randomGenerator = new Random();
-        //Zahl >0 und <zoneCount
+        //Zahl >0 und <zoneCount. nextint schneidet Kommastellen ab
         int randomInt = randomGenerator.nextInt(zoneCount);
+        //Zone wird mit 50% Chance auf + oder - gesetzt. z.B 0000 Zone0 +, 4444 Zone 0 -
+        if ( randomGenerator.nextInt(2) == 0){
+            randomInt += 4;
+        }
         String msg = String.valueOf(randomInt);
         msg += msg + msg + msg;
         for (int i = 1; i < 2; i++) {
@@ -163,69 +182,43 @@ public class GameScreen extends ActionBarActivity {
         }, delay);
     }
 
-    private void zoneOff(int zone) {
-        String msg = String.valueOf(zone);
-        msg += msg + msg + msg;
-        for (int i = 1; i < 2; i++) {
-            sendWithDelay(msg, 200 * i);
-        }
-    }
+//    private void zoneOff(int zone) {
+//        String msg = String.valueOf(zone);
+//        msg += msg + msg + msg;
+//        for (int i = 1; i < 2; i++) {
+//            sendWithDelay(msg, 200 * i);
+//        }
+//    }
 
-    private void detectHit() {
-        int i = 0;
-        for (BTConnection bt : PlayerSelection.myBlueComms) {
-            String inputText = bt.getInputText();
-            switch (inputText) {
-                case "hit1\r":
-                    gotHit(i, 5);
-                    break;
-                case "hit2\r":
-                    gotHit(i, 6);
-                    break;
-                case "hit3\r":
-                    gotHit(i, 7);
-                    break;
-                case "hit4\r":
-                    gotHit(i, 8);
-                    break;
-            }
-        }
-    }
+//    private void gotHit(int PlayerID, int zoneID) {
+//        Log.d("Treffer" + zoneID, "Score" + String.valueOf(highscore[PlayerID]));
+//        highscore[PlayerID]++;
+//        zoneOff(zoneID);
+//        PlayerSelection.myBlueComms.get(PlayerID).resetInputText();
+//        playSound(HIT_SOUND_NORMAL_2);
+//    }
 
-    private void gotHit(int PlayerID, int zoneID) {
-        Log.d("Treffer" + zoneID, "Score" + String.valueOf(highscore[PlayerID]));
-        highscore[PlayerID]++;
-        zoneOff(zoneID);
-        PlayerSelection.myBlueComms.get(PlayerID).resetInputText();
-        playSound(HIT_SOUND_NORMAL_2);
-    }
-
-    private void playSound(int soundCode) {
-        if (soundCode == HIT_SOUND_NORMAL) {
-            MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.hit);
-            int maxVolume = 100;
-            int currVolume = 100; //the volume we actually want
-            float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
-            mediaPlayer.setVolume(1.0f - log1, 1.0f - log1);
-            mediaPlayer.start();
-        }
-        if (soundCode == HIT_SOUND_LIGHTSABER) {
-            MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.lightsaberhit);
-            int maxVolume = 100;
-            int currVolume = 100; //the volume we actually want
-            float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
-            mediaPlayer.setVolume(1.0f - log1, 1.0f - log1);
-            mediaPlayer.start();
-        }
-        if (soundCode == HIT_SOUND_NORMAL_2) {
-            MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.hit_2);
-            int maxVolume = 100;
-            int currVolume = 100; //the volume we actually want
-            float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
-            mediaPlayer.setVolume(1.0f - log1, 1.0f - log1);
-            mediaPlayer.start();
-        }
-    }
+//    private static void playSound(int soundCode) {
+//        if (soundCode == HIT_SOUND_NORMAL) {
+//            sound1.start();
+//        }
+//        if (soundCode == HIT_SOUND_LIGHTSABER) {
+//            MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.lightsaberhit);
+//            int maxVolume = 100;
+//            int currVolume = 100; //the volume we actually want
+//            float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
+//            mediaPlayer.setVolume(1.0f - log1, 1.0f - log1);
+//            mediaPlayer.start();
+//        }
+//        if (soundCode == HIT_SOUND_NORMAL_2) {
+//            MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.hit_2);
+//            int maxVolume = 100;
+//            int currVolume = 100; //the volume we actually want
+//            float log1 = (float) (Math.log(maxVolume - currVolume) / Math.log(maxVolume));
+//            mediaPlayer.setVolume(1.0f - log1, 1.0f - log1);
+//            mediaPlayer.start();
+//        }
+//    }
 
     public static void setScore(Observable o, String msg) {
         int i = 0;
@@ -236,12 +229,27 @@ public class GameScreen extends ActionBarActivity {
                 switch (msg) {
                     case "h1\r":
                         highscore[i] += 1;
+                        sound1.start();
                         break;
                     case "h2\r":
                         highscore[i] += 2;
+                        sound2.start();
                         break;
                     case "h3\r":
                         highscore[i] += 3;
+                        sound3.start();
+                        break;
+                    case "n1\r":
+                        highscore[i] -= 1;
+                        soundfail1.start();
+                        break;
+                    case "n2\r":
+                        highscore[i] -= 1;
+                        soundfail2.start();
+                        break;
+                    case "n3\r":
+                        highscore[i] -= 1;
+                        soundfail3.start();
                         break;
                 }
                 container[i].setText(String.valueOf(highscore[i]));
