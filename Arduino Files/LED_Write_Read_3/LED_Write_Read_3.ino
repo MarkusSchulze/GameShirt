@@ -19,6 +19,8 @@ String string;
 int hitcooldown = 0;
 #define led1 A0
 #define led2 A1
+#define led1cross A2
+#define led2cross A3
 SoftwareSerial mySerial(6,5);
 
 //Globale Einstellungen
@@ -32,11 +34,13 @@ int calibrate = 3; //how often should we measure the mean value
 int led1on = 0; //3 = on bright, 2 = on weak, 1 = blinking, 0 = off
 int led1_timer = 0;
 boolean led1_blink_state = false;
+boolean led1_positive_score = true;
 
 //LED 2 States
 int led2on = 0; //3 = on bright, 2 = on weak, 1 = blinking, 0 = off
 int led2_timer = 0;
 boolean led2_blink_state = false;
+boolean led2_positive_score = true;
 
 //Schwellenwerte fuer Hit Detection
 long trigger;
@@ -95,6 +99,7 @@ void setup()
 }
 
 void loop(){
+    long time_loop = millis();
     string = "";
     if(led1on > 0 or true){
       capacitive();
@@ -103,8 +108,7 @@ void loop(){
       capacitive2();
     }
     
-    //global delay per cycle
-    delay(cycle_delay);
+    
     
     //small deactivation of zone after hitting it, to prevent one hit counting twice
     if(hitcooldown > 0) hitcooldown = hitcooldown - cycle_delay;
@@ -124,43 +128,54 @@ void loop(){
 
     //zone control from app
     int z1on_matches = 0;
-    int z1off_matches = 0;
+    int z1negative_matches = 0;
     int z2on_matches = 0;
-    int z2off_matches = 0;
+    int z2negative_matches = 0;
+    int off_matches = 0;
     if(string.length() >= 4) {
       for(int i = 0; i<=3; i++){
         if(string[i] == '0'){
           z1on_matches++;
         }
-        if(string[i] == '5'){
-          z1off_matches++;
+        if(string[i] == '4'){
+          z1negative_matches++;
         }
         if(string[i] == '1'){
           z2on_matches++;
         }
-        if(string[i] == '6'){
-          z2off_matches++;
+        if(string[i] == '5'){
+          z2negative_matches++;
+        }
+        if(string[i] == 'x'){
+          off_matches++;
         }
       }
     }
     if(z1on_matches >= 2){
         Serial.println("phase zone 1: 3");
-        led1On();
+        led1On(true);
     }
     if(z2on_matches >= 2){
         Serial.println("phase zone 2: 3");
-        led2On();
+        led2On(true);
     }
-    /* cant occur anymore
-    if(z1off_matches >= 2){
-        Serial.print("1 off");
-        led1Off_countdown();
+    if(z1negative_matches >= 2){
+        Serial.println("phase zone 1 minus: 3");
+        led1On(false);
     }
-    if(z2off_matches >= 2){
-        Serial.print("2 off");
-        led2Off_countdown();
+    if(z2negative_matches >= 2){
+        Serial.println("phase zone 2 minus: 3");
+        led2On(false);
     }
-    */
+    
+    //disable command
+    
+    if(off_matches >= 2){
+        Serial.print("zones off");
+        led1Off();
+        led2Off();
+    }
+
     
     /*
     if(string == "0000"){
@@ -196,9 +211,15 @@ void loop(){
         if(led1_blink_state){
           led1_blink_state = false;
           analogWrite(led1, 0);
+          if(led1_positive_score){
+            analogWrite(led1cross, 0);
+          }
         }else{
           led1_blink_state = true;
           analogWrite(led1, 255);
+          if(led1_positive_score){
+            analogWrite(led1cross, 255);
+          }
         }
       }
     }else{
@@ -220,9 +241,15 @@ void loop(){
         if(led2_blink_state){
           led2_blink_state = false;
           analogWrite(led2, 0);
+          if(led2_positive_score){
+            analogWrite(led2cross, 0);
+          }
         }else{
           led2_blink_state = true;
           analogWrite(led2, 255);
+          if(led2_positive_score){
+            analogWrite(led2cross, 255);
+          }
         }
       }
     }else{
@@ -239,39 +266,68 @@ void loop(){
             delay(10);
         }
     }*/
-    
+    //global delay per cycle
+    long time_passed = millis() - time_loop;
+    if(time_passed < cycle_delay){
+      delay(cycle_delay - time_passed);
+      Serial.println("loop running as fast as intended");
+    }else{
+      long overtime = time_passed - cycle_delay;
+      Serial.print("loop running slow by ms ");
+      Serial.println(overtime);
+    }
 }
 
-void led1On(){
+void led1On(boolean score){
+    led1_positive_score = score;
     analogWrite(led1, 255);
+    if(led1_positive_score){
+      analogWrite(led1cross, 255);
+    }
     led1on = 3;
     led1_timer = led_phase_time;
 }
 
 void led1OnWeak(){
     analogWrite(led1, 200);
+    if(led1_positive_score){
+      analogWrite(led1cross, 200);
+    }
     led1_timer = led_phase_time;
 }
 
 void led1Off(){
     analogWrite(led1, 0);
+    if(led1_positive_score){
+      analogWrite(led1cross, 0);
+    }
     led1_timer = 0;
     led1on = 0;
 }
 
-void led2On(){
+void led2On(boolean score){
+    led2_positive_score = score;
     analogWrite(led2, 255);
+    if(led2_positive_score){
+      analogWrite(led2cross, 255);
+    }
     led2on = 3;
     led2_timer = led_phase_time;
 }
 
 void led2OnWeak(){
     analogWrite(led2, 200);
+    if(led2_positive_score){
+      analogWrite(led2cross, 200);
+    }
     led2_timer = led_phase_time;
 }
 
 void led2Off(){
     analogWrite(led2, 0);
+    if(led2_positive_score){
+      analogWrite(led2cross, 0);
+    }
     led2_timer = 0;
     led2on = 0;
 }
@@ -293,13 +349,25 @@ void capacitive(){
     if(total1 > trigger && led1on > 0 && hitcooldown <= 0){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
       Serial.println("hit1");
       if(led1on == 3){
-        mySerial.println("h3");
+        if(led1_positive_score){
+          mySerial.println("h3");
+        }else{
+          mySerial.println("n1");
+        }
       }
       if(led1on == 2){
-        mySerial.println("h2");
+        if(led1_positive_score){
+          mySerial.println("h2");
+        }else{
+          mySerial.println("n2");
+        }
       }
       if(led1on == 1){
-        mySerial.println("h1");
+        if(led1_positive_score){
+          mySerial.println("h1");
+        }else{
+          mySerial.println("n3");
+        }
       }
       
       hitcooldown = hitcooldown_length;
@@ -334,14 +402,26 @@ void capacitive2(){
     //Serial.print(led2on);
     if(total1 > trigger2  && led2on > 0 && hitcooldown <= 0){  // threshold ermitteln, wenn gesamtwiderstand des garns fest steht
       Serial.println("hit2");
-      if(led1on == 3){
-        mySerial.println("h3");
+      if(led2on == 3){
+        if(led2_positive_score){
+          mySerial.println("h3");
+        }else{
+          mySerial.println("n1");
+        }
       }
-      if(led1on == 2){
-        mySerial.println("h2");
+      if(led2on == 2){
+        if(led2_positive_score){
+          mySerial.println("h2");
+        }else{
+          mySerial.println("n2");
+        }
       }
-      if(led1on == 1){
-        mySerial.println("h1");
+      if(led2on == 1){
+        if(led2_positive_score){
+          mySerial.println("h1");
+        }else{
+          mySerial.println("n3");
+        }
       }
       hitcooldown = hitcooldown_length;
       led2Off();
